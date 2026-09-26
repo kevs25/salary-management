@@ -1,0 +1,43 @@
+[project]
+name = "salary-management"
+version = "0.1.0"
+description = "Employee salary management for ACME's HR team"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy>=2.0.30,<2.1",
+    "alembic>=1.13",
+    "pydantic>=2.7,<3",
+    "pydantic-settings>=2.3",
+    "pymysql>=1.1",
+    "cryptography>=42",  # MySQL 8 caching_sha2_password auth
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "httpx>=0.27",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "integration: hits a real MySQL; skipped unless APP_TEST_DATABASE_URL is set",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
