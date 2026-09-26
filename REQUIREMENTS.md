@@ -36,19 +36,18 @@ Two decisions worth calling out: **salary is effective-dated history, not a colu
 2. Employee detail view: profile, current compensation, full salary history timeline.
 3. Create / edit employee; revise salary (creates a new effective-dated record, never overwrites).
 4. Salary band management: view and edit bands per department/role/level/country.
-5. CSV export of the current filtered view — HR's migration path off Excel.
 
 **Answering questions (the "insights" surface)**
-6. Dashboard: total headcount, total annual payroll cost (USD-normalised), average and median salary.
-7. Breakdowns: average / median / min / max pay and headcount by department, by country, by level, and by role.
-8. **Band compliance**: employees paid below band minimum or above band maximum, listed and actionable.
-9. **Compa-ratio** per employee (salary ÷ band mid) and distribution per department — the single most useful fairness signal an HR manager can get.
+5. Dashboard: total headcount, total annual payroll cost (USD-normalised), average and median salary.
+6. Breakdowns: average / median / min / max pay and headcount by department, by country, by level, and by role.
+7. **Band compliance**: employees paid below band minimum or above band maximum, listed and actionable.
+8. **Compa-ratio** per employee (salary ÷ band mid) and distribution per department — the single most useful fairness signal an HR manager can get.
 
 **Non-functional**
-10. List and analytics endpoints respond < 500 ms at 10k employees (indexed queries, aggregation in SQL, no N+1).
-11. Money as `DECIMAL`, never float. All writes in transactions.
-12. Unit tests on band resolution, compa-ratio, salary revision rules and analytics aggregation; integration tests on the API layer.
-13. Seed script generating 10,000 realistic employees with a coherent band structure.
+9. List and analytics endpoints respond < 500 ms at 10k employees (indexed queries, aggregation in SQL, no N+1).
+10. Money as `DECIMAL`, never float. All writes in transactions.
+11. Unit tests on band resolution, compa-ratio, salary revision rules and analytics aggregation; integration tests on the API layer.
+12. Seed script generating 10,000 realistic employees with a coherent band structure.
 
 ## 5. Out of Scope — and Why
 
