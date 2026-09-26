@@ -1,3 +1,21 @@
-from app.models.base import Base
+"""Importing this package registers every table on Base.metadata (Alembic relies on it)."""
 
-__all__ = ["Base"]
+from app.models.base import Base
+from app.models.employee import Employee, EmployeeStatus
+from app.models.reference import Country, Department, FxRate, JobRole, Level
+from app.models.salary_band import SalaryBand
+from app.models.salary_record import ChangeReason, SalaryRecord
+
+__all__ = [
+    "Base",
+    "ChangeReason",
+    "Country",
+    "Department",
+    "Employee",
+    "EmployeeStatus",
+    "FxRate",
+    "JobRole",
+    "Level",
+    "SalaryBand",
+    "SalaryRecord",
+]
