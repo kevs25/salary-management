@@ -50,6 +50,13 @@ cd frontend && npm test                          # unit + component tests, no ne
 - [backend/README.md](backend/README.md) - running and testing the API
 - [frontend/README.md](frontend/README.md) - how the web app is put together
 
+## How it was built
+
+Requirements and design were written first, then the backend and the web app were built
+feature by feature, with AI assistance for most of the code. The commit history shows the
+order; [docs/ai-notes.md](docs/ai-notes.md) records which decisions were made by hand and
+what the AI got wrong along the way.
+
 ## Stack
 
 Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, MySQL 8 · React, TypeScript, Vite, Mantine,

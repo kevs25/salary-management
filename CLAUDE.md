@@ -52,6 +52,8 @@ backend/
     integration/         API + real MySQL
 ```
 
+Frontend (`frontend/`): conventions are in `frontend/README.md` - generated API types (`npm run api:types` after any API change), filters in the URL, money as decimal strings, charts from `src/lib/chartColors.ts`.
+
 ## Domain model
 
 Country (code, name, currency), Department, JobRole, Level (L1-L5 with experience ranges), SalaryBand, Employee, SalaryRecord, FxRate.
@@ -99,4 +101,4 @@ Incremental commits that show evolution are part of the grade. Small, scoped, co
 
 ## AI usage log
 
-Maintain `docs/ai-notes.md`: what was delegated (scaffolding, CRUD boilerplate, seed generation, test skeletons, charts) vs decided by hand (data model, effective dating, index design, band fallback chain, scope cuts). Include the prompts that produced non-trivial output, and anything the AI got wrong that was corrected.
+Maintain `docs/ai-notes.md`: what was delegated (scaffolding, CRUD boilerplate, seed generation, test skeletons, charts) vs decided by hand (data model, effective dating, index design, band fallback chain, scope cuts). Record the decisions and anything the AI got wrong that was corrected; do not paste chat prompts verbatim.

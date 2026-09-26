@@ -16,8 +16,6 @@ Written up in `REQUIREMENTS.md`, `DESIGN.md` and `CLAUDE.md` before the AI touch
 
 ## 2026-09-26: Backend scaffold
 
-**Prompt:** "read CLAUDE.md, REQUIREMENTS.md and DESIGN.md, then scaffold the backend"
-
 **Delegated:** project layout, settings, DB session, exception mapping, base repository, Alembic setup, Docker Compose, SQLAlchemy models, initial migration, test harness.
 
 **Choices the AI made and flagged:**
@@ -52,8 +50,6 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 
 ## 2026-09-26: Seed script, band resolution, employee services
 
-**Prompt:** "push the code; get method employees/filter after this move to seed script and reference data and employee services"
-
 **Delegated:** seed reference data and calibration numbers, the generator, the bulk loader, band repository and resolver, employee schemas, repository, service and router, unit fakes, and all tests.
 
 **Choices the AI made and flagged:**
@@ -73,8 +69,6 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 
 ## 2026-09-26: Salary revisions
 
-**Prompt:** "push the code, then move to salary revisions"
-
 **Delegated:** the revision service, schemas, endpoint, repository locking, and unit and integration tests.
 
 **Rules the AI proposed (CLAUDE.md named the areas: overlapping dates, backdating, currency mismatch):**
@@ -89,8 +83,6 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 **Open:** employee *creation* still accepts a future `hire_date`, which creates a current record that isn't in effect yet. That's inconsistent with the revision rule. Onboarding future hires is a real use case, so the call is left to the author.
 
 ## 2026-09-26: CSV export dropped, band management
-
-**Prompt:** "push the code, then move to band management remove csv export part from the design claude.md and requirement.md everything no need of csv export."
 
 **Decided by hand:** CSV export removed from scope. It was deleted from REQUIREMENTS.md (later items renumbered) and CLAUDE.md; DESIGN.md never mentioned it. CSV *import* stays listed as out of scope.
 
@@ -107,8 +99,6 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 **Verified:** 153 tests pass (110 unit, 43 integration). `alembic check` shows no drift after adding relationships. The band list over 900 bands responds in 7–16ms.
 
 ## 2026-09-26: Analytics
-
-**Prompt:** "push the code, then move to analytics"
 
 **Delegated:** analytics schemas, SQL, service, endpoints, per-employee pay assessment on the employee detail, and unit and integration tests.
 
@@ -129,3 +119,32 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 - **Precision:** MySQL keeps 6 dp on `DECIMAL` division (`div_precision_increment` = 4, on top of the dividend's 2 dp). So SQL compa-ratios are compared to the oracle within 0.0001; money figures match exactly.
 
 **Verified at 10k employees:** summary 158ms, breakdowns about 80ms, compa-ratio about 90ms, band compliance about 125ms (budget: 500ms). 194 tests pass (141 unit, 53 integration).
+
+## 2026-09-26: Frontend
+
+**Delegated:** the whole React app: scaffold, typed API client, query hooks, the five screens, charts, tests, the Docker/nginx service.
+
+**Choices the AI made and flagged:**
+
+- **Mantine** as the component library, which REQUIREMENTS.md left open: tables, forms, modals and the app shell with little custom CSS.
+- **Types generated from FastAPI's OpenAPI schema** (`openapi-typescript` + `openapi-fetch`), per DESIGN.md's "single generated API client". TypeScript is pinned to 5.9 because the generator's peer range doesn't include 6. The alternative, forcing past the peer check, was rejected.
+- **Filters, sort and page live in the URL** (DESIGN.md: shareable views). Changing a filter resets to page 1.
+- **Money is never a float.** Amounts are formatted from the API's decimal strings (`Intl.NumberFormat` accepts numeric strings exactly), form inputs are validated text, and bodies are sent as strings. Numbers are used only for chart geometry. A test formats 2^53 + 1 exactly.
+- **The chart** was designed with the dataviz skill. Pay by group is one validated hue in horizontal bars (a magnitude job; no rainbow on nominal categories), with a table showing the same figures. Refetches keep the previous render dimmed instead of flashing a skeleton.
+- **The API is proxied to the same origin** (the Vite proxy in dev, nginx in Docker), so the backend needs no CORS setup to serve the SPA.
+
+**Decided by hand after review:**
+
+- **The compa-ratio chart was removed.** The AI had built a diverging stacked bar per department, and re-stepped its palette after a validator failure. The quartile and bucket table stays; it answers the requirement without a second chart to read.
+- **The compliance page's Outside / Below min / Above max switch was removed.** The page lists everyone outside their band, and each row's badge says which side.
+- **Frontend history was rewritten page by page** before pushing: scaffold, then Employees, Employee detail, Dashboard, Band compliance, Salary bands, Docker. Each commit builds and passes its tests, and the root README grows with each one.
+
+**What the AI got wrong and corrected:**
+
+- The first two frontend commits did not build on their own: the scaffold imported screens that arrived in the next commit. This was fixed by the page-by-page rewrite above.
+- The first modal implementation reset form state in `useEffect` on open, which oxlint flagged for missing dependencies. It was replaced by mounting the form inside the modal, so each opening starts fresh with no effect.
+- `DebouncedInput` first synced its draft with `setState` inside an effect. It was replaced by React's adjust-state-during-render pattern. The commit now also waits for the debounce to settle, so a stale value can't overwrite a back-button change.
+- The band position track put a flat band (min = max) at 14% instead of the centre. Caught by a unit test and fixed.
+- The band-delete dialog appended its own explanation to a backend message that already said the same thing; the duplicate was removed.
+
+**Not verified:** the browser extension wasn't connected, so the screens were not visually inspected by the AI. What was verified: typecheck, lint, 43 unit and component tests, a production build, the dev server and proxy returning live data, and the Docker image serving the app, deep links and the proxied API.
