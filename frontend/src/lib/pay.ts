@@ -1,3 +1,5 @@
+import { MONEY_PATTERN } from './format'
+
 /**
  * Where a marker sits on a min–max track, as a percentage of the track width.
  * The track shows 20% of the band width either side, so out-of-band pay stays
@@ -10,4 +12,11 @@ export function markerPosition(salary: number, min: number, max: number): number
   const start = min - pad
   const span = width + 2 * pad
   return Math.min(100, Math.max(0, ((salary - start) / span) * 100))
+}
+
+/** Mirrors the API's band rule so the form can say so before submitting. */
+export function bandAmountsError(min: string, mid: string, max: string): string | null {
+  if (![min, mid, max].every((v) => MONEY_PATTERN.test(v))) return null // per-field errors
+  const [lo, m, hi] = [min, mid, max].map(Number)
+  return lo <= m && m <= hi ? null : 'Amounts must satisfy min ≤ mid ≤ max'
 }

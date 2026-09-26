@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { markerPosition } from './pay'
+import { bandAmountsError, markerPosition } from './pay'
 
 describe('markerPosition', () => {
   // Track spans min - 20% of width .. max + 20%: 80 -> 120 shows 72 -> 128.
@@ -16,5 +16,21 @@ describe('markerPosition', () => {
 
   it('handles a flat band', () => {
     expect(markerPosition(100, 100, 100)).toBeCloseTo(50, 5)
+  })
+})
+
+describe('bandAmountsError', () => {
+  it('accepts ordered and flat bands', () => {
+    expect(bandAmountsError('80000', '100000', '120000')).toBeNull()
+    expect(bandAmountsError('100', '100', '100')).toBeNull()
+  })
+
+  it('rejects min above mid or mid above max', () => {
+    expect(bandAmountsError('100001', '100000', '120000')).toMatch(/min ≤ mid ≤ max/)
+    expect(bandAmountsError('80000', '120000.01', '120000')).toMatch(/min ≤ mid ≤ max/)
+  })
+
+  it('leaves malformed amounts to the per-field checks', () => {
+    expect(bandAmountsError('abc', '100', '1')).toBeNull()
   })
 })
