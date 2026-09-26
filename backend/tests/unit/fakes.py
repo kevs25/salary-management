@@ -5,6 +5,7 @@ the service code under test sees the same types it gets in production.
 """
 
 from dataclasses import dataclass, field
+from datetime import datetime
 from decimal import Decimal
 
 from app.models import (
@@ -156,3 +157,53 @@ class FakeSalaryRepository:
 
     def flush(self) -> None:
         pass
+
+
+class FakeBandRepository:
+    """Bands keyed by id; scope uniqueness is left to the service, as in production."""
+
+    def __init__(self, references: FakeReferenceRepository) -> None:
+        self.references = references
+        self.bands: dict[int, SalaryBand] = {}
+        self.referenced: set[int] = set()  # band ids some salary record points at
+
+    def find_band(
+        self, *, department_id: int, level_id: int, role_id: int | None, country_id: int | None
+    ) -> SalaryBand | None:
+        return next(
+            (
+                b
+                for b in self.bands.values()
+                if (b.department_id, b.level_id, b.role_id, b.country_id)
+                == (department_id, level_id, role_id, country_id)
+            ),
+            None,
+        )
+
+    def list(self, query: object) -> tuple[list[SalaryBand], int]:
+        raise NotImplementedError  # SQL covered by integration tests
+
+    def get(self, entity_id: int) -> SalaryBand | None:
+        return self.bands.get(entity_id)
+
+    def get_detail(self, band_id: int) -> SalaryBand | None:
+        band = self.bands.get(band_id)
+        if band is not None:
+            refs = self.references
+            band.department = refs.departments[band.department_id]
+            band.level = refs.levels[band.level_id]
+            band.role = refs.roles[band.role_id] if band.role_id else None
+            band.country = refs.countries[band.country_id] if band.country_id else None
+            band.updated_at = datetime(2026, 9, 1)
+        return band
+
+    def add(self, entity: SalaryBand) -> SalaryBand:
+        entity.id = max(self.bands, default=0) + 1
+        self.bands[entity.id] = entity
+        return entity
+
+    def is_referenced(self, band_id: int) -> bool:
+        return band_id in self.referenced
+
+    def delete(self, band: SalaryBand) -> None:
+        del self.bands[band.id]

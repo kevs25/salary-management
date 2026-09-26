@@ -66,6 +66,18 @@ class InvalidSalaryRevision(BusinessRuleViolation):
     code = "invalid_salary_revision"
 
 
+class InvalidBand(BusinessRuleViolation):
+    code = "invalid_band"
+
+
+class DuplicateBand(ConflictError):
+    code = "duplicate_band"
+
+
+class BandInUse(ConflictError):
+    code = "band_in_use"
+
+
 # Most specific first; the first isinstance match wins.
 _STATUS_BY_ERROR: list[tuple[type[DomainError], int]] = [
     (NotFoundError, status.HTTP_404_NOT_FOUND),

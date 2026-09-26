@@ -13,7 +13,7 @@ from app.repository.band import SalaryBandRepository
 from app.repository.employee import EmployeeRepository
 from app.repository.reference import ReferenceRepository
 from app.repository.salary import SalaryRepository
-from app.services.band import BandResolver
+from app.services.band import BandResolver, BandService
 from app.services.employee import EmployeeService
 from app.services.salary import SalaryService
 
@@ -71,3 +71,14 @@ def get_salary_service(
 
 
 SalaryServiceDep = Annotated[SalaryService, Depends(get_salary_service)]
+
+
+def get_band_service(session: DbSession) -> BandService:
+    return BandService(
+        bands=SalaryBandRepository(session),
+        references=ReferenceRepository(session),
+        uow=SqlAlchemyUnitOfWork(session),
+    )
+
+
+BandServiceDep = Annotated[BandService, Depends(get_band_service)]

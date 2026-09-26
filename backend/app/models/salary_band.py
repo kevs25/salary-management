@@ -1,9 +1,33 @@
+import enum
 from decimal import Decimal
 
 from sqlalchemy import CHAR, CheckConstraint, Computed, ForeignKey, Index, Integer, SmallInteger
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+from app.models.reference import Country, Department, JobRole, Level
+
+
+class BandScope(enum.StrEnum):
+    """Which parts of the cell a band is defined for, most specific first.
+
+    These are the only scopes band resolution looks up; a role without a country
+    is not one of them.
+    """
+
+    EXACT = "department+role+level+country"
+    DEPARTMENT_LEVEL_COUNTRY = "department+level+country"
+    DEPARTMENT_LEVEL = "department+level"
+
+    @classmethod
+    def of(cls, *, has_role: bool, has_country: bool) -> "BandScope | None":
+        if has_role and has_country:
+            return cls.EXACT
+        if not has_role and has_country:
+            return cls.DEPARTMENT_LEVEL_COUNTRY
+        if not has_role and not has_country:
+            return cls.DEPARTMENT_LEVEL
+        return None
 
 
 class SalaryBand(TimestampMixin, Base):
@@ -51,3 +75,14 @@ class SalaryBand(TimestampMixin, Base):
     country_key: Mapped[int] = mapped_column(
         SmallInteger, Computed("COALESCE(country_id, 0)", persisted=True)
     )
+
+    department: Mapped[Department] = relationship(lazy="raise")
+    role: Mapped[JobRole | None] = relationship(lazy="raise")
+    level: Mapped[Level] = relationship(lazy="raise")
+    country: Mapped[Country | None] = relationship(lazy="raise")
+
+    @property
+    def scope(self) -> BandScope | None:
+        return BandScope.of(
+            has_role=self.role_id is not None, has_country=self.country_id is not None
+        )
