@@ -87,3 +87,21 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 **Concurrency:** the current row is read with `SELECT ... FOR UPDATE`, and the close is flushed before the insert. The unique index on the generated `current_employee_id` column is the final guarantee of one current record. The AI first claimed in a docstring that a blocked second revision "reads the record the first one created". That InnoDB behaviour wasn't verified, so the claim was softened to what the unique index actually guarantees.
 
 **Open:** employee *creation* still accepts a future `hire_date`, which creates a current record that isn't in effect yet. That's inconsistent with the revision rule. Onboarding future hires is a real use case, so the call is left to the author.
+
+## 2026-09-26: CSV export dropped, band management
+
+**Prompt:** "push the code, then move to band management remove csv export part from the design claude.md and requirement.md everything no need of csv export."
+
+**Decided by hand:** CSV export removed from scope. It was deleted from REQUIREMENTS.md (later items renumbered) and CLAUDE.md; DESIGN.md never mentioned it. CSV *import* stays listed as out of scope.
+
+**Delegated:** a refactor moving reference lookups out of `EmployeeRepository` into `repository/reference.py`, so band validation doesn't depend on the employee repository. Also the band service, API, and tests.
+
+**Choices the AI made and flagged:**
+
+- **`BandScope` is defined once on the model.** Resolver strategies are named by it, and the API returns it. A role-specific band without a country is refused: resolution never looks one up, so it would be dead policy.
+- **Band currency is derived, not sent.** It's the country's currency, or USD for a department-wide band.
+- **Scope is immutable; only amounts are edited.** A different scope is a different band.
+- **Delete is allowed only if no salary record was ever priced against the band.** Salary history keeps its band link as an audit fact. Editing a band is the normal path.
+- **Known trade-off:** band *edits* are not effective-dated. Changing a band's amounts changes policy for everyone from now on, and the previous amounts are not kept. Compliance and compa-ratio will read today's bands. Band history is not needed for any listed feature, so it's left out; `updated_at` records when a band last changed.
+
+**Verified:** 153 tests pass (110 unit, 43 integration). `alembic check` shows no drift after adding relationships. The band list over 900 bands responds in 7–16ms.
