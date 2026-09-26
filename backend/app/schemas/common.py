@@ -17,6 +17,33 @@ class Page[T](BaseModel):
     page_size: int
 
 
+class DepartmentOut(Schema):
+    id: int
+    name: str
+
+
+class RoleOut(Schema):
+    id: int
+    name: str
+    department_id: int
+
+
+class LevelOut(Schema):
+    id: int
+    code: str
+    name: str
+    rank: int
+    min_years: int
+    max_years: int | None
+
+
+class CountryOut(Schema):
+    id: int
+    code: str
+    name: str
+    currency_code: str
+
+
 class ErrorBody(BaseModel):
     code: str
     message: str

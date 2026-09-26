@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
-main_router = APIRouter(prefix="/api/v1")
+from app.router.v1 import employee_router
 
-# v1 routers (employee, salary, band, analytics) are included here as they are built.
+main_router = APIRouter(prefix="/api/v1")
+main_router.include_router(employee_router.router)

@@ -8,6 +8,11 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import SqlAlchemyUnitOfWork, UnitOfWork, get_session_factory
+from app.repository.band import SalaryBandRepository
+from app.repository.employee import EmployeeRepository
+from app.repository.salary import SalaryRepository
+from app.services.band import BandResolver
+from app.services.employee import EmployeeService
 
 
 def get_db() -> Iterator[Session]:
@@ -29,3 +34,15 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 def get_unit_of_work(session: DbSession) -> UnitOfWork:
     return SqlAlchemyUnitOfWork(session)
+
+
+def get_employee_service(session: DbSession) -> EmployeeService:
+    return EmployeeService(
+        employees=EmployeeRepository(session),
+        salaries=SalaryRepository(session),
+        bands=BandResolver(SalaryBandRepository(session)),
+        uow=SqlAlchemyUnitOfWork(session),
+    )
+
+
+EmployeeServiceDep = Annotated[EmployeeService, Depends(get_employee_service)]

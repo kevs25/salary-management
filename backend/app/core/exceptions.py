@@ -48,6 +48,20 @@ class CurrencyMismatch(BusinessRuleViolation):
     code = "currency_mismatch"
 
 
+class InvalidReference(BusinessRuleViolation):
+    """A payload points at a department/role/level/country/manager that doesn't fit."""
+
+    code = "invalid_reference"
+
+
+class InvalidEmployeeChange(BusinessRuleViolation):
+    code = "invalid_employee_change"
+
+
+class MissingFxRate(BusinessRuleViolation):
+    code = "missing_fx_rate"
+
+
 # Most specific first; the first isinstance match wins.
 _STATUS_BY_ERROR: list[tuple[type[DomainError], int]] = [
     (NotFoundError, status.HTTP_404_NOT_FOUND),

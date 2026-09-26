@@ -2,9 +2,10 @@ import enum
 from datetime import date
 
 from sqlalchemy import Date, Enum, ForeignKey, Index, Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+from app.models.reference import Country, Department, JobRole, Level
 
 
 class EmployeeStatus(enum.StrEnum):
@@ -34,3 +35,15 @@ class Employee(TimestampMixin, Base):
         Enum(EmployeeStatus, values_callable=lambda e: [m.value for m in e]),
         default=EmployeeStatus.ACTIVE,
     )
+
+    # lazy="raise": related rows must be loaded explicitly (joinedload), so an
+    # accidental per-row lazy load fails loudly instead of becoming an N+1.
+    department: Mapped[Department] = relationship(lazy="raise")
+    role: Mapped[JobRole] = relationship(lazy="raise")
+    level: Mapped[Level] = relationship(lazy="raise")
+    country: Mapped[Country] = relationship(lazy="raise")
+    manager: Mapped["Employee | None"] = relationship(remote_side=[id], lazy="raise")
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
