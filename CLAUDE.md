@@ -71,7 +71,7 @@ Non-obvious decisions, keep them:
 
 CRUD: paginated server-side searchable employee list (filters: department, country, level, role, salary range; sortable), employee detail with salary history timeline, create/edit employee, salary revision, band management.
 
-Analytics: headcount, total payroll cost (USD), avg/median salary, breakdowns by department / country / level / role, band compliance (paid below min or above max), compa-ratio (salary / band mid) per employee and distributed per department.
+Analytics: headcount, total payroll cost (USD), avg/median salary, breakdowns by department / country / level / role, band compliance (paid below min or above max), compa-ratio (salary / band mid) per employee.
 
 Explicitly out of scope, do not build: payroll/payslips/tax, RBAC and multi-role auth, approval workflows, Excel import, live FX, equity/benefits/leave/performance, multi-tenancy, i18n, forecasting.
 

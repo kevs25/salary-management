@@ -41,7 +41,7 @@ Two decisions worth calling out: **salary is effective-dated history, not a colu
 5. Dashboard: total headcount, total annual payroll cost (USD-normalised), average and median salary.
 6. Breakdowns: average / median / min / max pay and headcount by department, by country, by level, and by role.
 7. **Band compliance**: employees paid below band minimum or above band maximum, listed and actionable.
-8. **Compa-ratio** per employee (salary ÷ band mid) and distribution per department — the single most useful fairness signal an HR manager can get.
+8. **Compa-ratio** per employee (salary ÷ band mid) — the single most useful fairness signal an HR manager can get.
 
 **Non-functional**
 9. List and analytics endpoints respond < 500 ms at 10k employees (indexed queries, aggregation in SQL, no N+1).
