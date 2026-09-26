@@ -22,3 +22,11 @@ class SqlAlchemyRepository[ModelT: Base]:
         self.session.add(entity)
         self.session.flush()
         return entity
+
+    def flush(self) -> None:
+        """Send pending changes now, so the next statement sees them.
+
+        Needed when statement order matters to a constraint, e.g. closing the old
+        current salary record before inserting the new one (unique current index).
+        """
+        self.session.flush()

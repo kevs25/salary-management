@@ -133,10 +133,21 @@ class FakeSalaryRepository:
             reverse=True,
         )
 
+    def current_for_update(self, employee_id: int) -> SalaryRecord | None:
+        return next(
+            (r for r in self.records if r.employee_id == employee_id and r.is_current), None
+        )
+
     def fx_rate(self, currency_code: str) -> Decimal | None:
         return self.fx_rates.get(currency_code)
 
     def add(self, entity: SalaryRecord) -> SalaryRecord:
+        # Mirrors the unique index on current_employee_id in MySQL.
+        if entity.is_current and self.current_for_update(entity.employee_id) is not None:
+            raise AssertionError(f"second current record for employee {entity.employee_id}")
         entity.id = len(self.records) + 1
         self.records.append(entity)
         return entity
+
+    def flush(self) -> None:
+        pass

@@ -6,7 +6,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.models import EmployeeStatus
-from app.schemas.common import CountryOut, DepartmentOut, LevelOut, RoleOut, Schema
+from app.schemas.common import CountryOut, DepartmentOut, LevelOut, Money, RoleOut, Schema
 from app.schemas.salary import SalaryRecordOut
 from app.utils.pagination import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, PageParams
 
@@ -20,7 +20,6 @@ Email = Annotated[
 EmployeeCode = Annotated[
     str, StringConstraints(strip_whitespace=True, to_upper=True, pattern=r"^[A-Za-z0-9-]{3,16}$")
 ]
-Money = Annotated[Decimal, Field(max_digits=14, decimal_places=2)]
 
 
 class EmployeeSort(StrEnum):

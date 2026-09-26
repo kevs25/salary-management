@@ -62,6 +62,10 @@ class MissingFxRate(BusinessRuleViolation):
     code = "missing_fx_rate"
 
 
+class InvalidSalaryRevision(BusinessRuleViolation):
+    code = "invalid_salary_revision"
+
+
 # Most specific first; the first isinstance match wins.
 _STATUS_BY_ERROR: list[tuple[type[DomainError], int]] = [
     (NotFoundError, status.HTTP_404_NOT_FOUND),

@@ -1,7 +1,8 @@
 """FastAPI dependency providers. Service factories (get_*_service) are added here
 as each service is built; tests override get_db or a service factory."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from datetime import date
 from typing import Annotated
 
 from fastapi import Depends
@@ -13,6 +14,7 @@ from app.repository.employee import EmployeeRepository
 from app.repository.salary import SalaryRepository
 from app.services.band import BandResolver
 from app.services.employee import EmployeeService
+from app.services.salary import SalaryService
 
 
 def get_db() -> Iterator[Session]:
@@ -36,6 +38,11 @@ def get_unit_of_work(session: DbSession) -> UnitOfWork:
     return SqlAlchemyUnitOfWork(session)
 
 
+def get_today() -> Callable[[], date]:
+    """The clock services use for "today". Tests override this with a fixed date."""
+    return date.today
+
+
 def get_employee_service(session: DbSession) -> EmployeeService:
     return EmployeeService(
         employees=EmployeeRepository(session),
@@ -46,3 +53,18 @@ def get_employee_service(session: DbSession) -> EmployeeService:
 
 
 EmployeeServiceDep = Annotated[EmployeeService, Depends(get_employee_service)]
+
+
+def get_salary_service(
+    session: DbSession, today: Annotated[Callable[[], date], Depends(get_today)]
+) -> SalaryService:
+    return SalaryService(
+        employees=EmployeeRepository(session),
+        salaries=SalaryRepository(session),
+        bands=BandResolver(SalaryBandRepository(session)),
+        uow=SqlAlchemyUnitOfWork(session),
+        today=today,
+    )
+
+
+SalaryServiceDep = Annotated[SalaryService, Depends(get_salary_service)]

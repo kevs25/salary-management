@@ -1,4 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from decimal import Decimal
+from typing import Annotated
+
+from pydantic import BaseModel, ConfigDict, Field
+
+# Input money: fits DECIMAL(14,2) exactly, so nothing is rounded on the way in.
+Money = Annotated[Decimal, Field(max_digits=14, decimal_places=2)]
 
 
 class Schema(BaseModel):
