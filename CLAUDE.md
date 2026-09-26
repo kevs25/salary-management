@@ -43,7 +43,7 @@ backend/
       main_router.py     mounts /api/v1
       v1/                employee_router, salary_router, band_router, analytics_router
     services/            employee, salary, band, analytics
-    repository/          base, employee, salary, band, analytics
+    repository/          base, reference, employee, salary, band, analytics
     utils/               pagination, currency
     seed/                seed.py + reference data
   alembic/
