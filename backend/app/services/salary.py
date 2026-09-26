@@ -26,6 +26,9 @@ from app.utils.currency import to_money, to_usd
 
 class EmployeeLookup(Protocol):
     def get(self, entity_id: int) -> Employee | None: ...
+
+
+class CurrencyLookup(Protocol):
     def country_currency(self, country_id: int) -> str | None: ...
 
 
@@ -40,12 +43,14 @@ class SalaryService:
     def __init__(
         self,
         employees: EmployeeLookup,
+        references: CurrencyLookup,
         salaries: SalaryRecords,
         bands: BandResolver,
         uow: UnitOfWork,
         today: Callable[[], date],
     ) -> None:
         self._employees = employees
+        self._references = references
         self._salaries = salaries
         self._bands = bands
         self._uow = uow
@@ -58,7 +63,7 @@ class SalaryService:
         if employee.status is EmployeeStatus.TERMINATED:
             raise InvalidSalaryRevision("Terminated employees cannot have their pay revised")
 
-        currency = self._employees.country_currency(employee.country_id)
+        currency = self._references.country_currency(employee.country_id)
         if payload.currency_code is not None and payload.currency_code != currency:
             raise CurrencyMismatch(
                 f"Pay for this employee is in {currency}, not {payload.currency_code}"

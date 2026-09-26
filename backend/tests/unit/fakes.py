@@ -63,12 +63,31 @@ class FakeBandLookup:
         return self.bands.get(key)
 
 
-class FakeEmployeeRepository:
+class FakeReferenceRepository:
     def __init__(self) -> None:
         self.departments: dict[int, Department] = {}
         self.roles: dict[int, JobRole] = {}
         self.levels: dict[int, Level] = {}
         self.countries: dict[int, Country] = {}
+
+    def department_exists(self, department_id: int) -> bool:
+        return department_id in self.departments
+
+    def level_exists(self, level_id: int) -> bool:
+        return level_id in self.levels
+
+    def role_department_id(self, role_id: int) -> int | None:
+        role = self.roles.get(role_id)
+        return role.department_id if role else None
+
+    def country_currency(self, country_id: int) -> str | None:
+        country = self.countries.get(country_id)
+        return country.currency_code if country else None
+
+
+class FakeEmployeeRepository:
+    def __init__(self, references: FakeReferenceRepository) -> None:
+        self.references = references
         self.employees: dict[int, Employee] = {}
 
     # Not exercised by the service rules; the SQL is covered by integration tests.
@@ -84,10 +103,10 @@ class FakeEmployeeRepository:
     def get_detail(self, employee_id: int) -> Employee | None:
         employee = self.employees.get(employee_id)
         if employee is not None:
-            employee.department = self.departments[employee.department_id]
-            employee.role = self.roles[employee.role_id]
-            employee.level = self.levels[employee.level_id]
-            employee.country = self.countries[employee.country_id]
+            employee.department = self.references.departments[employee.department_id]
+            employee.role = self.references.roles[employee.role_id]
+            employee.level = self.references.levels[employee.level_id]
+            employee.country = self.references.countries[employee.country_id]
             employee.manager = self.employees[employee.manager_id] if employee.manager_id else None
         return employee
 
@@ -101,20 +120,6 @@ class FakeEmployeeRepository:
 
     def email_taken(self, email: str, exclude_id: int | None = None) -> bool:
         return any(e.email == email and e.id != exclude_id for e in self.employees.values())
-
-    def department_exists(self, department_id: int) -> bool:
-        return department_id in self.departments
-
-    def level_exists(self, level_id: int) -> bool:
-        return level_id in self.levels
-
-    def role_department_id(self, role_id: int) -> int | None:
-        role = self.roles.get(role_id)
-        return role.department_id if role else None
-
-    def country_currency(self, country_id: int) -> str | None:
-        country = self.countries.get(country_id)
-        return country.currency_code if country else None
 
     def manager_id_of(self, employee_id: int) -> int | None:
         employee = self.employees.get(employee_id)

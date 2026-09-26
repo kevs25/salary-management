@@ -25,6 +25,7 @@ from app.services.employee import EmployeeService
 from tests.unit.fakes import (
     FakeBandLookup,
     FakeEmployeeRepository,
+    FakeReferenceRepository,
     FakeSalaryRepository,
     FakeUnitOfWork,
 )
@@ -39,20 +40,21 @@ class World:
     """A service wired to fakes, with a small org to validate against."""
 
     def __init__(self) -> None:
-        self.employees = FakeEmployeeRepository()
-        self.employees.departments = {
+        self.references = FakeReferenceRepository()
+        self.employees = FakeEmployeeRepository(self.references)
+        self.references.departments = {
             ENGINEERING: Department(id=ENGINEERING, name="Engineering"),
             SALES: Department(id=SALES, name="Sales"),
         }
-        self.employees.roles = {
+        self.references.roles = {
             BACKEND: JobRole(id=BACKEND, name="Backend Engineer", department_id=ENGINEERING),
             ACCOUNT_EXEC: JobRole(id=ACCOUNT_EXEC, name="Account Executive", department_id=SALES),
         }
-        self.employees.levels = {
+        self.references.levels = {
             L2: Level(id=L2, code="L2", name="Intermediate", rank=2, min_years=2, max_years=5),
             L3: Level(id=L3, code="L3", name="Senior", rank=3, min_years=5, max_years=8),
         }
-        self.employees.countries = {
+        self.references.countries = {
             INDIA: Country(id=INDIA, code="IN", name="India", currency_code="INR"),
             US: Country(id=US, code="US", name="United States", currency_code="USD"),
         }
@@ -63,6 +65,7 @@ class World:
         self.uow = FakeUnitOfWork()
         self.service = EmployeeService(
             employees=self.employees,
+            references=self.references,
             salaries=self.salaries,
             bands=BandResolver(self.bands),
             uow=self.uow,

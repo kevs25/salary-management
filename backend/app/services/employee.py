@@ -35,11 +35,14 @@ class EmployeeRepositoryPort(Protocol):
     def add(self, entity: Employee) -> Employee: ...
     def code_exists(self, employee_code: str) -> bool: ...
     def email_taken(self, email: str, exclude_id: int | None = None) -> bool: ...
+    def manager_id_of(self, employee_id: int) -> int | None: ...
+
+
+class ReferenceLookup(Protocol):
     def department_exists(self, department_id: int) -> bool: ...
     def level_exists(self, level_id: int) -> bool: ...
     def role_department_id(self, role_id: int) -> int | None: ...
     def country_currency(self, country_id: int) -> str | None: ...
-    def manager_id_of(self, employee_id: int) -> int | None: ...
 
 
 class SalaryRepositoryPort(Protocol):
@@ -52,11 +55,13 @@ class EmployeeService:
     def __init__(
         self,
         employees: EmployeeRepositoryPort,
+        references: ReferenceLookup,
         salaries: SalaryRepositoryPort,
         bands: BandResolver,
         uow: UnitOfWork,
     ) -> None:
         self._employees = employees
+        self._references = references
         self._salaries = salaries
         self._bands = bands
         self._uow = uow
@@ -187,16 +192,16 @@ class EmployeeService:
         self, department_id: int, role_id: int, level_id: int, country_id: int
     ) -> str:
         """Validate the org placement; returns the country's currency."""
-        if not self._employees.department_exists(department_id):
+        if not self._references.department_exists(department_id):
             raise InvalidReference(f"Department {department_id} does not exist")
-        role_department = self._employees.role_department_id(role_id)
+        role_department = self._references.role_department_id(role_id)
         if role_department is None:
             raise InvalidReference(f"Role {role_id} does not exist")
         if role_department != department_id:
             raise InvalidReference(f"Role {role_id} does not belong to department {department_id}")
-        if not self._employees.level_exists(level_id):
+        if not self._references.level_exists(level_id):
             raise InvalidReference(f"Level {level_id} does not exist")
-        currency = self._employees.country_currency(country_id)
+        currency = self._references.country_currency(country_id)
         if currency is None:
             raise InvalidReference(f"Country {country_id} does not exist")
         return currency

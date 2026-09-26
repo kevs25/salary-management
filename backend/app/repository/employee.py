@@ -178,21 +178,5 @@ class EmployeeRepository(SqlAlchemyRepository[Employee]):
             condition = condition & (Employee.id != exclude_id)
         return bool(self.session.scalar(select(exists().where(condition))))
 
-    # Reference lookups used to validate a payload's foreign keys.
-
-    def department_exists(self, department_id: int) -> bool:
-        return self.session.get(Department, department_id) is not None
-
-    def level_exists(self, level_id: int) -> bool:
-        return self.session.get(Level, level_id) is not None
-
-    def role_department_id(self, role_id: int) -> int | None:
-        role = self.session.get(JobRole, role_id)
-        return role.department_id if role else None
-
-    def country_currency(self, country_id: int) -> str | None:
-        country = self.session.get(Country, country_id)
-        return country.currency_code if country else None
-
     def manager_id_of(self, employee_id: int) -> int | None:
         return self.session.scalar(select(Employee.manager_id).where(Employee.id == employee_id))

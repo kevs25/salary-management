@@ -18,6 +18,7 @@ from app.services.salary import SalaryService
 from tests.unit.fakes import (
     FakeBandLookup,
     FakeEmployeeRepository,
+    FakeReferenceRepository,
     FakeSalaryRepository,
     FakeUnitOfWork,
 )
@@ -30,8 +31,9 @@ EMP_ID, INDIA, ENGINEERING, BACKEND, L2 = 1, 1, 1, 10, 2
 
 class World:
     def __init__(self) -> None:
-        self.employees = FakeEmployeeRepository()
-        self.employees.countries = {
+        self.references = FakeReferenceRepository()
+        self.employees = FakeEmployeeRepository(self.references)
+        self.references.countries = {
             INDIA: Country(id=INDIA, code="IN", name="India", currency_code="INR")
         }
         self.employees.employees[EMP_ID] = Employee(
@@ -51,6 +53,7 @@ class World:
         self.uow = FakeUnitOfWork()
         self.service = SalaryService(
             employees=self.employees,
+            references=self.references,
             salaries=self.salaries,
             bands=BandResolver(self.bands),
             uow=self.uow,

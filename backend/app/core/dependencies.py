@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.database import SqlAlchemyUnitOfWork, UnitOfWork, get_session_factory
 from app.repository.band import SalaryBandRepository
 from app.repository.employee import EmployeeRepository
+from app.repository.reference import ReferenceRepository
 from app.repository.salary import SalaryRepository
 from app.services.band import BandResolver
 from app.services.employee import EmployeeService
@@ -46,6 +47,7 @@ def get_today() -> Callable[[], date]:
 def get_employee_service(session: DbSession) -> EmployeeService:
     return EmployeeService(
         employees=EmployeeRepository(session),
+        references=ReferenceRepository(session),
         salaries=SalaryRepository(session),
         bands=BandResolver(SalaryBandRepository(session)),
         uow=SqlAlchemyUnitOfWork(session),
@@ -60,6 +62,7 @@ def get_salary_service(
 ) -> SalaryService:
     return SalaryService(
         employees=EmployeeRepository(session),
+        references=ReferenceRepository(session),
         salaries=SalaryRepository(session),
         bands=BandResolver(SalaryBandRepository(session)),
         uow=SqlAlchemyUnitOfWork(session),
