@@ -23,23 +23,33 @@ Layers: `router -> service -> repository -> MySQL`.
 
 - Routers handle HTTP only. They never touch the ORM session directly.
 - All business rules live in services. All SQL lives in repositories.
-- Services raise domain exceptions; one FastAPI handler maps them to HTTP codes. Services stay framework-agnostic.
+- Services raise domain exceptions from `core/exceptions.py`; the one handler registered there maps them to HTTP codes. Services never import FastAPI or build responses.
 - Pydantic schemas are the API contract, SQLAlchemy models are storage. Never return ORM objects from a router.
 
 Layout:
 
 ```
-app/
-  api/v1/          employees, salaries, bands, analytics, meta
-  schemas/         Pydantic DTOs
-  services/        employee, salary, band, analytics
-  repositories/    base, employee, salary, band, analytics
-  models/          SQLAlchemy entities
-  core/            config, db session, exceptions, dependencies
-  seed/            seed.py + reference data
-tests/
-  unit/            services with fake repositories, no DB
-  integration/     API + real MySQL
+backend/
+  app/
+    main.py              FastAPI init, middleware, exception handlers
+    core/
+      settings.py        Pydantic BaseSettings, reads env
+      database.py        singleton engine + QueuePool, session factory, UnitOfWork
+      dependencies.py    get_db, get_*_service
+      exceptions.py      domain exceptions + the handler mapping them to HTTP
+    models/              SQLAlchemy tables
+    schemas/             employee, salary, band, analytics, common
+    router/
+      main_router.py     mounts /api/v1
+      v1/                employee_router, salary_router, band_router, analytics_router
+    services/            employee, salary, band, analytics
+    repository/          base, employee, salary, band, analytics
+    utils/               pagination, currency
+    seed/                seed.py + reference data
+  alembic/
+  tests/
+    unit/                services with fake repositories, no DB
+    integration/         API + real MySQL
 ```
 
 ## Domain model

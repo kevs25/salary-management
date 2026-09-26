@@ -37,3 +37,12 @@ Written up in `REQUIREMENTS.md`, `DESIGN.md` and `CLAUDE.md` before the AI touch
 - It first declared `salary_records.employee_id` with `ON DELETE CASCADE`. MySQL forbids CASCADE on a base column of a stored generated column, and cascading would also have deleted the salary audit trail. Changed to RESTRICT. Leavers use `status = terminated`.
 - It first gave `band_id` `ON DELETE SET NULL`, which would silently drop the band reference from historical salary records. Changed to RESTRICT.
 - The hand-written migration first produced doubled check-constraint names (`ck_salary_records_ck_salary_records_...`) because the metadata naming convention was applied on top of full names. Caught by rendering the migration as offline SQL. Fixed with `op.f()`. Migration DDL was then diffed line-by-line against the models' DDL and matches.
+
+## 2026-09-26: Backend structure corrected by hand
+
+The AI's first layout followed DESIGN.md's *suggested* layout literally (`api/v1/`, `repositories/`, a separate `api/errors.py` and `core/unit_of_work.py`). It was replaced with a structure specified by hand:
+
+- `core/settings.py`, `core/database.py` (singleton engine with an explicit `QueuePool`, session factory), `core/dependencies.py` (`get_db`, `get_*_service`), `core/exceptions.py` (domain exceptions plus their handler).
+- `router/main_router.py` + `router/v1/<feature>_router.py`, `repository/`, and `utils/` for `pagination` and `currency`.
+
+The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork` moved into `core/database.py`. The engine is now created lazily via `get_engine()`, so importing the app in unit tests never touches the database. CLAUDE.md and DESIGN.md were updated to the new layout so the brief and the code agree.

@@ -23,20 +23,30 @@ MySQL 8 (InnoDB)
 
 The rule that keeps this honest: **routers never touch the ORM session directly, and repositories never contain business rules.** Every rule worth testing sits in the service layer, which is why the unit tests are fast.
 
-Suggested backend layout:
+Backend layout:
 
 ```
-app/
-  api/v1/          routers: employees, salaries, bands, analytics, meta
-  schemas/         Pydantic request/response models (DTOs)
-  services/        employee_service, salary_service, band_service, analytics_service
-  repositories/    base, employee_repo, salary_repo, band_repo, analytics_repo
-  models/          SQLAlchemy ORM entities
-  core/            config, db session, exceptions, dependencies
-  seed/            seed.py + reference data
-tests/
-  unit/            services with fake repositories — no DB, millisecond-fast
-  integration/     API + real MySQL
+backend/
+  app/
+    main.py              FastAPI init, middleware, exception handlers
+    core/
+      settings.py        Pydantic BaseSettings, reads env
+      database.py        singleton engine + QueuePool, session factory, UnitOfWork
+      dependencies.py    get_db, get_*_service
+      exceptions.py      domain exceptions + the handler mapping them to HTTP
+    models/              SQLAlchemy tables
+    schemas/             employee, salary, band, analytics, common
+    router/
+      main_router.py     mounts /api/v1
+      v1/                employee_router, salary_router, band_router, analytics_router
+    services/            employee, salary, band, analytics
+    repository/          base, employee, salary, band, analytics
+    utils/               pagination, currency
+    seed/                seed.py + reference data
+  alembic/
+  tests/
+    unit/                services with fake repositories, no DB
+    integration/         API + real MySQL
 ```
 
 ## 2. Patterns Used
@@ -44,14 +54,14 @@ tests/
 | Pattern | Where | Why |
 |---|---|---|
 | **Layered architecture** | Whole backend | Clear boundaries; each layer testable in isolation. |
-| **Repository** | `repositories/` | Isolates persistence. Lets unit tests inject in-memory fakes instead of spinning up MySQL — directly serves the "fast, deterministic tests" requirement. |
+| **Repository** | `repository/` | Isolates persistence. Lets unit tests inject in-memory fakes instead of spinning up MySQL — directly serves the "fast, deterministic tests" requirement. |
 | **Dependency Injection** | FastAPI `Depends` | Sessions, repos, services and the current user are injected, not imported. Swapping a real repo for a fake in tests is a one-line override. |
 | **DTO / Schema separation** | `schemas/` | Pydantic models are the API contract; ORM models are storage. Prevents accidental leakage of internal columns and lets the two evolve independently. |
 | **Strategy** | Band resolution & analytics metrics | Resolving the band for an employee has fallbacks (exact `dept+role+level+country` → `dept+level+country` → `dept+level`). Each is a strategy tried in order, so the policy is readable and unit-testable instead of a nested `if` tree. Same shape for metric calculators (avg / median / p90). |
-| **Specification / query-object** | `employee_repo.list()` | Filters (department, country, level, salary range, search) compose into one query object rather than a combinatorial explosion of finder methods. |
+| **Specification / query-object** | `repository/employee.list()` | Filters (department, country, level, salary range, search) compose into one query object rather than a combinatorial explosion of finder methods. |
 | **Unit of Work** | Session-per-request | A salary revision closes the previous record and opens a new one — must be atomic. One transaction commits or rolls back the whole operation. |
 | **Factory** | Seed script | `EmployeeFactory` / `SalaryFactory` produce coherent synthetic records from a seeded RNG, so the 10k dataset is reproducible run to run. |
-| **CQRS-lite** | `analytics_repo` | Writes go through the ORM; analytics are hand-written aggregate SQL returning flat read models. Forcing dashboard queries through ORM objects at 10k rows is how you get N+1s. |
+| **CQRS-lite** | `repository/analytics` | Writes go through the ORM; analytics are hand-written aggregate SQL returning flat read models. Forcing dashboard queries through ORM objects at 10k rows is how you get N+1s. |
 | **Custom exception → handler mapping** | `core/exceptions` | Services raise domain errors (`BandNotFound`, `InvalidEffectiveDate`); one FastAPI exception handler maps them to HTTP codes. Services stay framework-agnostic. |
 
 On the frontend: container/presentational split, TanStack Query as the server-state cache (URL-synced filters so any view is shareable), and a single generated API client so types come from one place.
