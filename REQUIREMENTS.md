@@ -1,0 +1,78 @@
+# Salary Management System — Requirements
+
+**Author:** Kevin Daniel · **Date:** 2026-09-26 · **Status:** v1 (pre-build)
+
+---
+
+## 1. Goal
+
+Give ACME's HR Manager a single web application to **maintain** salary data for ~10,000 employees across multiple countries, and to **answer questions** about how the org pays people — replacing the current spreadsheet workflow.
+
+Success = the HR Manager can find any employee in seconds, update pay with an auditable history, and answer "are we paying this role fairly?" without exporting to Excel.
+
+## 2. User Persona
+
+**HR Manager (single persona, single role).** Owns compensation data for the whole org. Comfortable with Excel, not with SQL. Cares about accuracy, speed of lookup, and defensible answers in pay-review meetings.
+
+## 3. Core Model (what the domain is)
+
+| Entity | Purpose |
+|---|---|
+| Country | Name, ISO code, currency. Salaries are local-currency by nature. |
+| Department | Engineering, Sales, Finance, … |
+| Job Role | Role within a department (e.g. Backend Engineer). |
+| Level | Experience band (L1 → L5, each with a years-of-experience range). |
+| **Salary Band** | `(department, role, level, country)` → `min / mid / max` in local currency. The org's pay policy. |
+| Employee | Code, name, email, department, role, level, country, manager, joining date, status. |
+| **Salary Record** | Employee's current + historical pay: base, bonus, currency, effective dates, linked band, reason for change. |
+| FX Rate | Snapshot rate per currency → USD, so cross-country comparison is possible. |
+
+Two decisions worth calling out: **salary is effective-dated history, not a column on the employee** (you cannot answer "how did pay change this year" otherwise), and **every amount is stored in local currency plus a normalised USD figure** (you cannot compare India vs US pay otherwise).
+
+## 4. In Scope — Features
+
+**Employee & salary management**
+1. Paginated, server-side searchable employee list (name / code / email) with filters on department, country, level, role, and salary range; sortable columns. Must stay responsive at 10k rows.
+2. Employee detail view: profile, current compensation, full salary history timeline.
+3. Create / edit employee; revise salary (creates a new effective-dated record, never overwrites).
+4. Salary band management: view and edit bands per department/role/level/country.
+5. CSV export of the current filtered view — HR's migration path off Excel.
+
+**Answering questions (the "insights" surface)**
+6. Dashboard: total headcount, total annual payroll cost (USD-normalised), average and median salary.
+7. Breakdowns: average / median / min / max pay and headcount by department, by country, by level, and by role.
+8. **Band compliance**: employees paid below band minimum or above band maximum, listed and actionable.
+9. **Compa-ratio** per employee (salary ÷ band mid) and distribution per department — the single most useful fairness signal an HR manager can get.
+
+**Non-functional**
+10. List and analytics endpoints respond < 500 ms at 10k employees (indexed queries, aggregation in SQL, no N+1).
+11. Money as `DECIMAL`, never float. All writes in transactions.
+12. Unit tests on band resolution, compa-ratio, salary revision rules and analytics aggregation; integration tests on the API layer.
+13. Seed script generating 10,000 realistic employees with a coherent band structure.
+
+## 5. Out of Scope — and Why
+
+| Left out | Reasoning |
+|---|---|
+| Payroll run, payslips, tax, statutory deductions | This is a compensation *record* system, not a payroll engine. Payroll is a regulated, per-country problem an order of magnitude larger than the stated need. |
+| Multi-role auth & RBAC (employee self-service, manager approvals) | One persona was specified. A single HR login keeps auth a thin, replaceable layer; roles are a schema addition later, not a rewrite. |
+| Approval workflows / maker-checker on salary changes | Real requirement in a real org, but it needs a policy owner to define the chain. The effective-dated salary history already gives the audit trail approvals exist to protect. |
+| Excel/CSV bulk *import* | Tempting, but a forgiving importer is a project in itself (validation, partial failure, dedupe). The seed script proves bulk load works; the UI proves the workflow. |
+| Live FX API integration | A stored rate snapshot makes analytics deterministic and testable. Live rates would make yesterday's dashboard unreproducible. |
+| Equity / RSUs / benefits / leave / performance reviews | Adjacent HR domains. Including them dilutes the one question this tool must answer well: how do we pay people in cash. |
+| Multi-tenancy, i18n, notifications, mobile app | No stated need; each adds surface area without improving the HR Manager's core job. |
+| Salary forecasting / increment simulation | Genuinely valuable, but speculative without real data. Noted as the clearest v2 candidate. |
+
+## 6. Assumptions
+
+- No production data was supplied, so **all data is synthetic**, generated by the seed script: 8 departments, 6 countries, 5 levels, ~30 roles, 10,000 employees, with bands calibrated per country so figures look plausible.
+- Salary figures are **annual gross base + bonus**, in the employee's local currency.
+- Employees belong to exactly one department and one country at a time.
+- FX rates are a fixed snapshot committed with the seed data.
+
+## 7. Tech Stack
+
+- **Backend:** Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, pytest.
+- **Database:** MySQL 8 (InnoDB). Chosen over SQLite because the data has real relational depth, needs concurrent writes, window functions for median/compa-ratio distributions, and `DECIMAL` money semantics.
+- **Frontend:** React + TypeScript + Vite, TanStack Query for server state, a component library for tables/forms, Recharts for the analytics views.
+- **Delivery:** Docker Compose for local run, deployed backend + frontend, seed script, incremental commits, video walkthrough.
