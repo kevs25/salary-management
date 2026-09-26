@@ -3,6 +3,9 @@ import { lazy, Suspense } from 'react'
 import { Navigate, NavLink as RouterLink, Route, Routes, useLocation } from 'react-router-dom'
 
 // One chunk per screen, loaded when first visited.
+const DashboardPage = lazy(() =>
+  import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
+)
 const EmployeesPage = lazy(() =>
   import('./pages/EmployeesPage').then((m) => ({ default: m.EmployeesPage })),
 )
@@ -10,7 +13,10 @@ const EmployeeDetailPage = lazy(() =>
   import('./pages/EmployeeDetailPage').then((m) => ({ default: m.EmployeeDetailPage })),
 )
 
-const NAV = [{ to: '/employees', label: 'Employees', hint: 'Find, add, revise pay' }]
+const NAV = [
+  { to: '/dashboard', label: 'Dashboard', hint: 'How the org pays people' },
+  { to: '/employees', label: 'Employees', hint: 'Find, add, revise pay' },
+]
 
 export function App() {
   const { pathname } = useLocation()
@@ -45,10 +51,11 @@ export function App() {
           }
         >
           <Routes>
-            <Route path="/" element={<Navigate to="/employees" replace />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/employees" element={<EmployeesPage />} />
             <Route path="/employees/:employeeId" element={<EmployeeDetailPage />} />
-            <Route path="*" element={<Navigate to="/employees" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Suspense>
       </AppShell.Main>
