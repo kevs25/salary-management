@@ -52,12 +52,6 @@ class SalaryRecord(Base):
 
     __tablename__ = "salary_records"
     __table_args__ = (
-        Index(
-            "uq_salary_records_employee_id_effective_from",
-            "employee_id",
-            text("effective_from DESC"),
-            unique=True,
-        ),
         Index(None, "is_current"),
         Index("uq_salary_records_current_employee_id", "current_employee_id", unique=True),
         CheckConstraint("base_amount >= 0 AND bonus_amount >= 0", name="amounts_non_negative"),
@@ -94,3 +88,13 @@ class SalaryRecord(Base):
     )
     note: Mapped[str | None] = mapped_column(String(255))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP"))
+
+
+# Declared on the columns (not as text) so Alembic can compare it; a text("... DESC")
+# element shows up as permanent false drift in `alembic check`.
+Index(
+    "uq_salary_records_employee_id_effective_from",
+    SalaryRecord.employee_id,
+    SalaryRecord.effective_from.desc(),
+    unique=True,
+)

@@ -37,6 +37,9 @@ Written up in `REQUIREMENTS.md`, `DESIGN.md` and `CLAUDE.md` before the AI touch
 - It first declared `salary_records.employee_id` with `ON DELETE CASCADE`. MySQL forbids CASCADE on a base column of a stored generated column, and cascading would also have deleted the salary audit trail. Changed to RESTRICT. Leavers use `status = terminated`.
 - It first gave `band_id` `ON DELETE SET NULL`, which would silently drop the band reference from historical salary records. Changed to RESTRICT.
 - The hand-written migration first produced doubled check-constraint names (`ck_salary_records_ck_salary_records_...`) because the metadata naming convention was applied on top of full names. Caught by rendering the migration as offline SQL. Fixed with `op.f()`. Migration DDL was then diffed line-by-line against the models' DDL and matches.
+- The model declared the `(employee_id, effective_from DESC)` index with a raw `text("effective_from DESC")` element. Once Docker was up, `alembic check` against real MySQL reported it as permanent false drift, because Alembic can't compare text index elements. Re-declared with `SalaryRecord.effective_from.desc()`, which gives the same DDL and no drift. Caveat: MySQL reflection doesn't report index direction, so a future ASC/DESC change on this index won't show up in `alembic check`.
+
+**Verified against MySQL 8.4 (Docker):** the migration downgrades and upgrades cleanly, the 5 schema-invariant integration tests pass (duplicate current record, `current_is_open` CHECK, duplicate NULL-scope band, band min > mid), `alembic check` reports no drift, and the full suite passes inside the `api` container.
 
 ## 2026-09-26: Backend structure corrected by hand
 
