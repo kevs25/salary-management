@@ -9,6 +9,9 @@ const DashboardPage = lazy(() =>
 const EmployeesPage = lazy(() =>
   import('./pages/EmployeesPage').then((m) => ({ default: m.EmployeesPage })),
 )
+const CompliancePage = lazy(() =>
+  import('./pages/CompliancePage').then((m) => ({ default: m.CompliancePage })),
+)
 const EmployeeDetailPage = lazy(() =>
   import('./pages/EmployeeDetailPage').then((m) => ({ default: m.EmployeeDetailPage })),
 )
@@ -16,6 +19,7 @@ const EmployeeDetailPage = lazy(() =>
 const NAV = [
   { to: '/dashboard', label: 'Dashboard', hint: 'How the org pays people' },
   { to: '/employees', label: 'Employees', hint: 'Find, add, revise pay' },
+  { to: '/compliance', label: 'Band compliance', hint: 'Paid outside policy' },
 ]
 
 export function App() {
@@ -55,6 +59,7 @@ export function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/employees" element={<EmployeesPage />} />
             <Route path="/employees/:employeeId" element={<EmployeeDetailPage />} />
+            <Route path="/compliance" element={<CompliancePage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </Suspense>

@@ -8,6 +8,7 @@ six countries, and to answer how the org pays people - replacing a spreadsheet.
 - **Employees** - server-side search, filters (department, role, level, country, status, USD salary range), sortable columns, pagination; create and edit employees.
 - **Employee detail** - current pay, where it sits in the band (compa-ratio, gap), salary history timeline, salary revision.
 - **Dashboard** - headcount, payroll cost, median and average pay, band compliance and median compa-ratio; pay by department / country / level / role; compa-ratio quartiles per group.
+- **Band compliance** - everyone paid below their band minimum or above its maximum, most severe first, each a link to the employee.
 
 Behind it, a FastAPI service keeps salary as effective-dated history, resolves each
 employee's pay band through a fallback chain, and computes every aggregate in SQL.
