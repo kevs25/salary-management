@@ -70,3 +70,20 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 - The employee-code schema used `to_upper=True` with pattern `^[A-Z0-9-]...`. Pydantic checks the pattern *before* the case transform, so a lowercase code `e00042` was rejected instead of normalised. Caught by the unit test that sends lowercase input. The pattern now accepts either case.
 
 **Verified at 10k employees (MySQL 8.4):** every employee endpoint responds in under 55ms (budget: 500ms). `EXPLAIN` shows the filtered list uses the composite `(department, country, level)` index and an `eq_ref` on `uq_salary_records_current_employee_id` for current pay.
+
+## 2026-09-26: Salary revisions
+
+**Prompt:** "push the code, then move to salary revisions"
+
+**Delegated:** the revision service, schemas, endpoint, repository locking, and unit and integration tests.
+
+**Rules the AI proposed (CLAUDE.md named the areas: overlapping dates, backdating, currency mismatch):**
+
+- **Backdating is allowed only inside the current period.** A start on or before the current record's start would overlap or rewrite closed history, so it's rejected. Corrections to old history are out of scope; they would need their own audited flow.
+- **No future-dated revisions.** A future start would make `is_current` point at pay not yet in effect. Scheduled raises would need a "pending" state, which is left out. "Today" comes from an injected clock (`get_today`), so unit and integration tests pin it.
+- **Pay must stay in the country's currency.** An explicit `currency_code` that differs is a `CurrencyMismatch`. A current record in a different currency is also refused, as a guard against data loaded outside the API.
+- Terminated employees and no-op revisions are refused. `hire` is not a revision reason.
+
+**Concurrency:** the current row is read with `SELECT ... FOR UPDATE`, and the close is flushed before the insert. The unique index on the generated `current_employee_id` column is the final guarantee of one current record. The AI first claimed in a docstring that a blocked second revision "reads the record the first one created". That InnoDB behaviour wasn't verified, so the claim was softened to what the unique index actually guarantees.
+
+**Open:** employee *creation* still accepts a future `hire_date`, which creates a current record that isn't in effect yet. That's inconsistent with the revision rule. Onboarding future hires is a real use case, so the call is left to the author.
