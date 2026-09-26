@@ -1,7 +1,6 @@
 import { Group, Paper, Stack, Text, Title } from '@mantine/core'
-import { type AnalyticsFilter, useBreakdown, useCompaRatio, usePaySummary } from '../api/analytics'
+import { type AnalyticsFilter, useBreakdown, usePaySummary } from '../api/analytics'
 import { BreakdownSection } from '../components/analytics/BreakdownSection'
-import { CompaRatioSection } from '../components/analytics/CompaRatioSection'
 import { KpiTiles } from '../components/analytics/KpiTiles'
 import { DimensionFilters } from '../components/DimensionFilters'
 import { QueryStatus } from '../components/QueryStatus'
@@ -18,11 +17,9 @@ export function DashboardPage() {
     country_id: intParam(params.country_id),
   }
   const by = isDimension(params.by) ? params.by : 'department'
-  const compaBy = isDimension(params.compa_by) ? params.compa_by : 'department'
 
   const summary = usePaySummary(filters)
   const breakdown = useBreakdown({ ...filters, by })
-  const compa = useCompaRatio({ ...filters, by: compaBy })
 
   return (
     <Stack>
@@ -47,15 +44,6 @@ export function DashboardPage() {
             breakdown={breakdown.data}
             onDimensionChange={(value) => update({ by: value, page: undefined })}
             stale={breakdown.isPlaceholderData}
-          />
-        )}
-      </QueryStatus>
-      <QueryStatus isPending={compa.isPending} error={compa.error}>
-        {compa.data && (
-          <CompaRatioSection
-            distribution={compa.data}
-            onDimensionChange={(value) => update({ compa_by: value, page: undefined })}
-            stale={compa.isPlaceholderData}
           />
         )}
       </QueryStatus>

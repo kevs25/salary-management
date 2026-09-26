@@ -135,7 +135,7 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 
 **Decided by hand after review:**
 
-- **The compa-ratio chart was removed.** The AI had built a diverging stacked bar per department, and re-stepped its palette after a validator failure. The quartile and bucket table stays; it answers the requirement without a second chart to read.
+- **The compa-ratio section was removed from the dashboard.** The AI had built a diverging stacked bar per department (and re-stepped its palette after a validator failure), then a quartile table; both were cut to keep the dashboard to one question: how pay is spread. Compa-ratio stays visible per employee (detail page, compliance list) and as the median on the dashboard; the `/analytics/compa-ratio` endpoint is kept in the API.
 - **The compliance page's Outside / Below min / Above max switch was removed.** The page lists everyone outside their band, and each row's badge says which side.
 - **Frontend history was rewritten page by page** before pushing: scaffold, then Employees, Employee detail, Dashboard, Band compliance, Salary bands, Docker. Each commit builds and passes its tests, and the root README grows with each one.
 
