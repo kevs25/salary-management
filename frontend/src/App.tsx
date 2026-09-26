@@ -1,9 +1,18 @@
-import { AppShell, Center, Group, Text, Title } from '@mantine/core'
+import { AppShell, Center, Group, Loader, NavLink, Text, Title } from '@mantine/core'
+import { lazy, Suspense } from 'react'
+import { Navigate, NavLink as RouterLink, Route, Routes, useLocation } from 'react-router-dom'
 
-/** The shell; screens are added one page at a time. */
+// One chunk per screen, loaded when first visited.
+const EmployeesPage = lazy(() =>
+  import('./pages/EmployeesPage').then((m) => ({ default: m.EmployeesPage })),
+)
+
+const NAV = [{ to: '/employees', label: 'Employees', hint: 'Find, add, revise pay' }]
+
 export function App() {
+  const { pathname } = useLocation()
   return (
-    <AppShell header={{ height: 56 }} padding="lg">
+    <AppShell header={{ height: 56 }} navbar={{ width: 230, breakpoint: 'sm' }} padding="lg">
       <AppShell.Header>
         <Group h="100%" px="lg">
           <Title order={4}>ACME</Title>
@@ -12,10 +21,32 @@ export function App() {
           </Text>
         </Group>
       </AppShell.Header>
+      <AppShell.Navbar p="sm">
+        {NAV.map((item) => (
+          <NavLink
+            key={item.to}
+            component={RouterLink}
+            to={item.to}
+            label={item.label}
+            description={item.hint}
+            active={pathname.startsWith(item.to)}
+          />
+        ))}
+      </AppShell.Navbar>
       <AppShell.Main>
-        <Center py="xl">
-          <Text c="dimmed">The API is ready; screens are added one page at a time.</Text>
-        </Center>
+        <Suspense
+          fallback={
+            <Center py="xl">
+              <Loader />
+            </Center>
+          }
+        >
+          <Routes>
+            <Route path="/" element={<Navigate to="/employees" replace />} />
+            <Route path="/employees" element={<EmployeesPage />} />
+            <Route path="*" element={<Navigate to="/employees" replace />} />
+          </Routes>
+        </Suspense>
       </AppShell.Main>
     </AppShell>
   )

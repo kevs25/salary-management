@@ -5,7 +5,7 @@ six countries, and to answer how the org pays people - replacing a spreadsheet.
 
 ## What it does
 
-- Screens are added page by page.
+- **Employees** - server-side search, filters (department, role, level, country, status, USD salary range), sortable columns, pagination; create and edit employees.
 
 Behind it, a FastAPI service keeps salary as effective-dated history, resolves each
 employee's pay band through a fallback chain, and computes every aggregate in SQL.
