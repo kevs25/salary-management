@@ -17,12 +17,11 @@ employee's pay band through a fallback chain, and computes every aggregate in SQ
 ## Run it
 
 ```sh
-docker compose up --build -d                                   # MySQL + API on :8000
+docker compose up --build -d                                   # MySQL, API, web app
 docker compose run --rm api python -m app.seed.seed --reset    # 10,000 demo employees (~3s)
-cd frontend && npm install && npm run dev                      # web app on :5173
 ```
 
-API docs: http://localhost:8000/docs.
+Open **http://localhost:8080**. API docs: http://localhost:8000/docs.
 
 ## Tests
 
@@ -49,6 +48,7 @@ cd frontend && npm test                          # unit + component tests, no ne
 - [DESIGN.md](DESIGN.md) - architecture, patterns, trade-offs
 - [docs/ai-notes.md](docs/ai-notes.md) - what was delegated to AI, what was decided by hand, what was corrected
 - [backend/README.md](backend/README.md) - running and testing the API
+- [frontend/README.md](frontend/README.md) - how the web app is put together
 
 ## Stack
 
