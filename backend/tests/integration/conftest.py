@@ -16,7 +16,7 @@ from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session
 
 from alembic import command
-from app.core.db import get_session
+from app.core.dependencies import get_db
 from app.main import create_app
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -60,6 +60,6 @@ def db_session(engine: Engine) -> Iterator[Session]:
 @pytest.fixture
 def client(db_session: Session) -> Iterator[TestClient]:
     app = create_app()
-    app.dependency_overrides[get_session] = lambda: db_session
+    app.dependency_overrides[get_db] = lambda: db_session
     with TestClient(app) as test_client:
         yield test_client

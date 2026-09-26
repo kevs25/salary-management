@@ -2,7 +2,6 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from app.api.errors import register_error_handlers
 from app.core.exceptions import (
     BandNotFound,
     CurrencyMismatch,
@@ -10,12 +9,13 @@ from app.core.exceptions import (
     DuplicateEmployee,
     EmployeeNotFound,
     InvalidEffectiveDate,
+    register_exception_handlers,
 )
 
 
 def _client_raising(error: DomainError) -> TestClient:
     app = FastAPI()
-    register_error_handlers(app)
+    register_exception_handlers(app)
 
     @app.get("/boom")
     def boom() -> None:

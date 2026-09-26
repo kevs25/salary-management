@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.errors import register_error_handlers
-from app.api.v1 import api_router
-from app.core.config import get_settings
+from app.core.exceptions import register_exception_handlers
+from app.core.settings import get_settings
+from app.router.main_router import main_router
 
 
 def create_app() -> FastAPI:
@@ -16,8 +16,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    register_error_handlers(app)
-    app.include_router(api_router)
+    register_exception_handlers(app)
+    app.include_router(main_router)
 
     @app.get("/health", tags=["meta"])
     def health() -> dict[str, str]:
