@@ -105,3 +105,27 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 - **Known trade-off:** band *edits* are not effective-dated. Changing a band's amounts changes policy for everyone from now on, and the previous amounts are not kept. Compliance and compa-ratio will read today's bands. Band history is not needed for any listed feature, so it's left out; `updated_at` records when a band last changed.
 
 **Verified:** 153 tests pass (110 unit, 43 integration). `alembic check` shows no drift after adding relationships. The band list over 900 bands responds in 7–16ms.
+
+## 2026-09-26: Analytics
+
+**Prompt:** "push the code, then move to analytics"
+
+**Delegated:** analytics schemas, SQL, service, endpoints, per-employee pay assessment on the employee detail, and unit and integration tests.
+
+**Choices the AI made and flagged:**
+
+- **Population:** non-terminated employees at their current pay; on-leave people count. Pay statistics use base pay in USD; payroll cost is base + bonus in USD. Band comparisons use base pay only.
+- **The band is resolved live, in SQL, from each employee's placement today.** Three outer joins in fallback order, each probing the unique band-scope index. The `band_id` stored on a salary record means "the band when this pay was set". This settles the open question from the employee-services entry: a promotion or department move is judged against the new band immediately.
+- **Pay is compared in the band's currency.** It's the local amount when the currencies match, so min/max boundaries compare exactly. Otherwise (department-wide USD bands) it's the USD amount converted at the snapshot rate and rounded to cents, the same way in SQL and in Python.
+- **Medians and quartiles use `ROW_NUMBER()` windows with linear interpolation** (the `PERCENTILE_CONT` definition, which MySQL lacks). Histogram buckets are conditional sums. Nothing is aggregated in Python.
+- **The SQL/Python split follows CLAUDE.md** ("aggregate in SQL" plus "unit-test compa-ratio and boundaries"). The per-employee rules (band position with inclusive min/max, compa-ratio to 4 dp, gap) are pure Python functions, unit-tested at exact boundaries. The SQL uses the same comparisons. An integration test pins the SQL to the same semantics: pay at min/max is within the band, one cent outside is not.
+- **An integration test checks the analytics SQL against an independent oracle,** computed row by row with Python's `statistics` module on a 300-employee generated dataset. It covers headcount, payroll, mean, median, quartiles, histogram, compliance counts and the out-of-band list.
+
+**What the AI got wrong or had to adjust:**
+
+- The first draft used `PARTITION BY 0` (a constant) for the whole-population case. It was changed to an unpartitioned window before it ran, since MySQL's treatment of a constant there was uncertain.
+- A stray `null` import and `__all__` entry were left in the repository module and removed.
+- The first draft of the oracle test had a meaningless expression for the mean (`fmean(x) and sum(x)/len(x)`). It was caught on review before running.
+- **Precision:** MySQL keeps 6 dp on `DECIMAL` division (`div_precision_increment` = 4, on top of the dividend's 2 dp). So SQL compa-ratios are compared to the oracle within 0.0001; money figures match exactly.
+
+**Verified at 10k employees:** summary 158ms, breakdowns about 80ms, compa-ratio about 90ms, band compliance about 125ms (budget: 500ms). 194 tests pass (141 unit, 53 integration).
