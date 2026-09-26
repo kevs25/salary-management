@@ -49,3 +49,24 @@ The AI's first layout followed DESIGN.md's *suggested* layout literally (`api/v1
 - `router/main_router.py` + `router/v1/<feature>_router.py`, `repository/`, and `utils/` for `pagination` and `currency`.
 
 The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork` moved into `core/database.py`. The engine is now created lazily via `get_engine()`, so importing the app in unit tests never touches the database. CLAUDE.md and DESIGN.md were updated to the new layout so the brief and the code agree.
+
+## 2026-09-26: Seed script, band resolution, employee services
+
+**Prompt:** "push the code; get method employees/filter after this move to seed script and reference data and employee services"
+
+**Delegated:** seed reference data and calibration numbers, the generator, the bulk loader, band repository and resolver, employee schemas, repository, service and router, unit fakes, and all tests.
+
+**Choices the AI made and flagged:**
+
+- **The seed is split into a pure generator and a thin loader.** `generate()` returns row dicts with explicit ids, using a seeded RNG and a fixed `AS_OF` date. So the DESIGN.md seed sanity check runs as a unit test on the full 10k dataset with no database (0.3s). The loader bulk-inserts in one transaction and refuses a non-empty database without `--reset`.
+- **Salary history is generated backwards from today's pay.** Pay rises are undone year by year (merit, promotion, market adjustment). This keeps the out-of-band placement of current pay exact: 4%, 200 below and 200 above.
+- **Band resolution was built in this step, not deferred to the band feature,** because creating an employee creates the hire salary record, which links a band.
+- **A profile edit can't change country.** The pay currency would silently go stale; that change belongs to a salary revision.
+- **Known gap, to settle in analytics:** a PATCH that changes department, role or level doesn't re-link the current salary record's `band_id`. Band-compliance analytics should resolve the band from the employee's *current* placement. `band_id` on a record is then "the band when this pay was set", which is an audit fact.
+- **`/employees/filters` returns reference lists plus the current USD salary range,** so the frontend can draw the range slider.
+
+**What the AI got wrong and corrected:**
+
+- The employee-code schema used `to_upper=True` with pattern `^[A-Z0-9-]...`. Pydantic checks the pattern *before* the case transform, so a lowercase code `e00042` was rejected instead of normalised. Caught by the unit test that sends lowercase input. The pattern now accepts either case.
+
+**Verified at 10k employees (MySQL 8.4):** every employee endpoint responds in under 55ms (budget: 500ms). `EXPLAIN` shows the filtered list uses the composite `(department, country, level)` index and an `eq_ref` on `uq_salary_records_current_employee_id` for current pay.
