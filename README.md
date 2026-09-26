@@ -6,6 +6,7 @@ six countries, and to answer how the org pays people - replacing a spreadsheet.
 ## What it does
 
 - **Employees** - server-side search, filters (department, role, level, country, status, USD salary range), sortable columns, pagination; create and edit employees.
+- **Employee detail** - current pay, where it sits in the band (compa-ratio, gap), salary history timeline, salary revision.
 
 Behind it, a FastAPI service keeps salary as effective-dated history, resolves each
 employee's pay band through a fallback chain, and computes every aggregate in SQL.

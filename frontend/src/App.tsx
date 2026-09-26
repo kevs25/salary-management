@@ -6,6 +6,9 @@ import { Navigate, NavLink as RouterLink, Route, Routes, useLocation } from 'rea
 const EmployeesPage = lazy(() =>
   import('./pages/EmployeesPage').then((m) => ({ default: m.EmployeesPage })),
 )
+const EmployeeDetailPage = lazy(() =>
+  import('./pages/EmployeeDetailPage').then((m) => ({ default: m.EmployeeDetailPage })),
+)
 
 const NAV = [{ to: '/employees', label: 'Employees', hint: 'Find, add, revise pay' }]
 
@@ -44,6 +47,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/employees" replace />} />
             <Route path="/employees" element={<EmployeesPage />} />
+            <Route path="/employees/:employeeId" element={<EmployeeDetailPage />} />
             <Route path="*" element={<Navigate to="/employees" replace />} />
           </Routes>
         </Suspense>
