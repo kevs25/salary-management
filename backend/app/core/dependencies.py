@@ -9,10 +9,12 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import SqlAlchemyUnitOfWork, UnitOfWork, get_session_factory
+from app.repository.analytics import AnalyticsRepository
 from app.repository.band import SalaryBandRepository
 from app.repository.employee import EmployeeRepository
 from app.repository.reference import ReferenceRepository
 from app.repository.salary import SalaryRepository
+from app.services.analytics import AnalyticsService
 from app.services.band import BandResolver, BandService
 from app.services.employee import EmployeeService
 from app.services.salary import SalaryService
@@ -82,3 +84,10 @@ def get_band_service(session: DbSession) -> BandService:
 
 
 BandServiceDep = Annotated[BandService, Depends(get_band_service)]
+
+
+def get_analytics_service(session: DbSession) -> AnalyticsService:
+    return AnalyticsService(AnalyticsRepository(session))
+
+
+AnalyticsServiceDep = Annotated[AnalyticsService, Depends(get_analytics_service)]
