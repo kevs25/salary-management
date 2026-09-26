@@ -40,7 +40,14 @@ class FakeBandLookup:
     calls: list[tuple[int, int, int | None, int | None]] = field(default_factory=list)
 
     def add(
-        self, *, department_id: int, level_id: int, role_id: int | None, country_id: int | None
+        self,
+        *,
+        department_id: int,
+        level_id: int,
+        role_id: int | None,
+        country_id: int | None,
+        currency_code: str = "USD",
+        amounts: tuple[str, str, str] = ("80.00", "100.00", "120.00"),
     ) -> SalaryBand:
         band = SalaryBand(
             id=len(self.bands) + 1,
@@ -48,10 +55,10 @@ class FakeBandLookup:
             role_id=role_id,
             level_id=level_id,
             country_id=country_id,
-            currency_code="USD",
-            min_amount=Decimal("80.00"),
-            mid_amount=Decimal("100.00"),
-            max_amount=Decimal("120.00"),
+            currency_code=currency_code,
+            min_amount=Decimal(amounts[0]),
+            mid_amount=Decimal(amounts[1]),
+            max_amount=Decimal(amounts[2]),
         )
         self.bands[(department_id, level_id, role_id, country_id)] = band
         return band

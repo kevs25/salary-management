@@ -11,6 +11,7 @@ from app.core.exceptions import (
     MissingFxRate,
 )
 from app.models import (
+    BandScope,
     ChangeReason,
     Country,
     Department,
@@ -19,6 +20,7 @@ from app.models import (
     JobRole,
     Level,
 )
+from app.schemas.analytics import BandPosition
 from app.schemas.employee import EmployeeCreate, EmployeeUpdate
 from app.services.band import BandResolver
 from app.services.employee import EmployeeService
@@ -187,6 +189,47 @@ class TestGetEmployee:
     def test_unknown_employee_is_not_found(self, world: World) -> None:
         with pytest.raises(EmployeeNotFound):
             world.service.get_employee(404)
+
+    def test_assesses_current_pay_against_the_band_for_todays_placement(self, world: World) -> None:
+        world.bands.add(
+            department_id=ENGINEERING,
+            level_id=L3,
+            role_id=BACKEND,
+            country_id=INDIA,
+            currency_code="INR",
+            amounts=("2000000.00", "2500000.00", "3000000.00"),
+        )
+        emp_id = world.hire(level_id=L2, base_amount=Decimal("1500000.00"))
+        assert world.service.get_employee(emp_id).pay_assessment is None  # no L2 band
+
+        promoted = world.service.update_employee(emp_id, EmployeeUpdate(level_id=L3))
+
+        assessment = promoted.pay_assessment
+        assert assessment is not None
+        assert assessment.band.scope is BandScope.EXACT
+        assert assessment.salary_in_band_currency == Decimal("1500000.00")
+        assert assessment.compa_ratio == Decimal("0.6000")
+        assert assessment.position is BandPosition.BELOW
+        assert assessment.gap_pct == Decimal("25.00")
+
+    def test_department_wide_usd_band_compares_usd_pay(self, world: World) -> None:
+        world.bands.add(
+            department_id=ENGINEERING,
+            level_id=L2,
+            role_id=None,
+            country_id=None,
+            currency_code="USD",
+            amounts=("15000.00", "18000.00", "21000.00"),
+        )
+
+        detail = world.service.get_employee(world.hire(base_amount=Decimal("1500000.00")))
+
+        assessment = detail.pay_assessment
+        assert assessment is not None
+        assert assessment.band.scope is BandScope.DEPARTMENT_LEVEL
+        assert assessment.salary_in_band_currency == Decimal("18000.00")  # INR at 0.012
+        assert assessment.compa_ratio == Decimal("1.0000")
+        assert assessment.position is BandPosition.WITHIN
 
 
 class TestUpdateEmployee:

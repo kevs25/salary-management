@@ -6,6 +6,7 @@ from typing import Annotated, Self
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
 from app.models import EmployeeStatus
+from app.schemas.analytics import PayAssessment
 from app.schemas.common import CountryOut, DepartmentOut, LevelOut, Money, RoleOut, Schema
 from app.schemas.salary import SalaryRecordOut
 from app.utils.pagination import DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE, PageParams
@@ -130,6 +131,9 @@ class EmployeeDetail(Schema):
     country: CountryOut
     manager: EmployeeRef | None
     current_salary: SalaryRecordOut | None
+    pay_assessment: PayAssessment | None = Field(
+        description="current base pay against the band that applies today; null if none"
+    )
     salary_history: list[SalaryRecordOut] = Field(description="newest first")
 
 

@@ -10,6 +10,7 @@ from app.core.exceptions import (
     MissingFxRate,
 )
 from app.models import ChangeReason, Employee, SalaryRecord
+from app.schemas.analytics import BandRef, PayAssessment
 from app.schemas.common import Page
 from app.schemas.employee import (
     EmployeeCreate,
@@ -20,6 +21,7 @@ from app.schemas.employee import (
     EmployeeUpdate,
 )
 from app.schemas.salary import SalaryRecordOut
+from app.services.analytics import assess, salary_in_band_currency
 from app.services.band import BandCell, BandResolver
 from app.utils.currency import to_money, to_usd
 
@@ -90,8 +92,46 @@ class EmployeeService:
                 "country": employee.country,
                 "manager": employee.manager,
                 "current_salary": current,
+                "pay_assessment": self._assess(employee, current),
                 "salary_history": history,
             }
+        )
+
+    def _assess(self, employee: Employee, current: SalaryRecordOut | None) -> PayAssessment | None:
+        """Band is resolved from where the employee sits today, not from current.band_id."""
+        if current is None:
+            return None
+        resolved = self._bands.resolve(
+            BandCell(
+                department_id=employee.department_id,
+                role_id=employee.role_id,
+                level_id=employee.level_id,
+                country_id=employee.country_id,
+            )
+        )
+        if resolved is None:
+            return None
+        band = resolved.band
+        rate = self._salaries.fx_rate(band.currency_code)
+        if rate is None:
+            return None
+        salary = salary_in_band_currency(
+            base_amount=current.base_amount,
+            base_amount_usd=current.base_amount_usd,
+            salary_currency=current.currency_code,
+            band_currency=band.currency_code,
+            band_rate_to_usd=rate,
+        )
+        return assess(
+            salary,
+            BandRef(
+                id=band.id,
+                scope=resolved.strategy.scope,
+                currency_code=band.currency_code,
+                min_amount=band.min_amount,
+                mid_amount=band.mid_amount,
+                max_amount=band.max_amount,
+            ),
         )
 
     # Writes
