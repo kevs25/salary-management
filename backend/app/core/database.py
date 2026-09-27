@@ -1,11 +1,24 @@
 from functools import lru_cache
-from typing import Protocol
+from typing import Any, Protocol
 
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from app.core.settings import get_settings
+
+
+def database_url() -> str:
+    url = get_settings().database_url
+    if not url:
+        raise RuntimeError("APP_DATABASE_URL is not set (see backend/.env.example)")
+    return url
+
+
+def connect_args() -> dict[str, Any]:
+    """Driver arguments shared by the app, Alembic and the integration tests."""
+    ca = get_settings().db_ssl_ca
+    return {"ssl": {"ca": ca}} if ca else {}
 
 
 @lru_cache
@@ -17,7 +30,8 @@ def get_engine() -> Engine:
     """
     settings = get_settings()
     return create_engine(
-        settings.database_url,
+        database_url(),
+        connect_args=connect_args(),
         poolclass=QueuePool,
         pool_size=settings.db_pool_size,
         max_overflow=settings.db_max_overflow,

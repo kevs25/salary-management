@@ -6,7 +6,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_prefix="APP_", extra="ignore")
 
-    database_url: str = "mysql+pymysql://salary:salary@localhost:3306/salary"
+    # e.g. mysql+pymysql://user:password@host:port/dbname - no default, so a missing
+    # setting fails loudly instead of quietly pointing somewhere else.
+    database_url: str | None = None
+    # CA certificate for TLS to a managed MySQL (e.g. Aiven). Kept out of the URL so the
+    # same URL works on the host and in the container, where the file path differs.
+    db_ssl_ca: str | None = None
     db_pool_size: int = 10
     db_max_overflow: int = 10
     db_pool_recycle_seconds: int = 3600  # below MySQL's default wait_timeout of 8h
