@@ -15,7 +15,8 @@ Read `REQUIREMENTS.md` and `DESIGN.md` before writing code. `docs/requirements-n
 - Backend: Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, Pydantic v2, pytest
 - Database: MySQL 8 (InnoDB)
 - Frontend: React + TypeScript + Vite, TanStack Query, Recharts
-- Docker Compose for local run
+- Database: managed MySQL 8 on Aiven (no local database container)
+- Docker Compose runs the API and frontend
 
 ## Architecture rules (do not violate)
 
@@ -86,7 +87,7 @@ List and analytics endpoints must respond under 500ms at 10,000 employees.
 ## Testing
 
 - Unit tests must not require a database. Inject fake repositories. Target: band resolution including every fallback, compa-ratio and out-of-band detection at exact boundaries, salary revision rules (overlapping effective dates, backdating, currency mismatch), analytics maths on fixed fixtures.
-- Integration tests hit the API against a containerised MySQL.
+- Integration tests hit the API against real MySQL, in a separate database whose name ends in `_test`. They drop and re-migrate it, and refuse any other database.
 - Deterministic: seeded RNG, no wall-clock dependency.
 
 ## Seed script

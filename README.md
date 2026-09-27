@@ -16,9 +16,13 @@ employee's pay band through a fallback chain, and computes every aggregate in SQ
 
 ## Run it
 
+The database is a managed MySQL 8 on Aiven. Put its URL and CA certificate in
+`backend/.env` and `backend/ca.pem`; both are gitignored, and
+[backend/README.md](backend/README.md#database) has the steps. Then:
+
 ```sh
-docker compose up --build -d                                   # MySQL, API, web app
-docker compose run --rm api python -m app.seed.seed --reset    # 10,000 demo employees (~3s)
+docker compose up --build -d                            # API and web app
+docker compose run --rm api python -m app.seed.seed     # 10,000 demo employees, once
 ```
 
 Open **http://localhost:8080**. API docs: http://localhost:8000/docs.
@@ -26,7 +30,7 @@ Open **http://localhost:8080**. API docs: http://localhost:8000/docs.
 ## Tests
 
 ```sh
-docker compose run --rm api pytest                  # backend: unit + integration on MySQL
+docker compose run --rm api pytest               # backend: unit (+ integration with a *_test DB)
 cd frontend && npm test                          # unit + component tests, no network
 ```
 
@@ -59,5 +63,5 @@ what the AI got wrong along the way.
 
 ## Stack
 
-Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, MySQL 8 · React, TypeScript, Vite, Mantine,
+Python 3.12, FastAPI, SQLAlchemy 2.0, Alembic, MySQL 8 (Aiven) · React, TypeScript, Vite, Mantine,
 TanStack Query, Recharts · Docker Compose.

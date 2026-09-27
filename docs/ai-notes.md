@@ -148,3 +148,15 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 - The band-delete dialog appended its own explanation to a backend message that already said the same thing; the duplicate was removed.
 
 **Not verified:** the browser extension wasn't connected, so the screens were not visually inspected by the AI. What was verified: typecheck, lint, 43 unit and component tests, a production build, the dev server and proxy returning live data, and the Docker image serving the app, deep links and the proxied API.
+
+## 2026-09-27: Database moved to Aiven
+
+**Decided by hand:** the app runs against a managed MySQL 8 on Aiven. The Docker MySQL service and its init script are gone; Compose now runs only the API and the frontend.
+
+**Delegated:** the configuration changes, a test-safety guard, and the docs.
+
+- **The CA certificate is its own setting (`APP_DB_SSL_CA`), not a `?ssl_ca=` URL parameter.** The certificate lives at a different path on the host and in the container, so one URL can't serve both. Compose mounts `backend/ca.pem` read-only and points the setting at it. The app, Alembic and the integration tests all use the same `connect_args()`.
+- **`APP_DATABASE_URL` no longer has a localhost default.** A missing setting fails with a clear error instead of quietly pointing at a database that no longer exists.
+- **The integration tests refuse any database whose name doesn't end in `_test`.** They drop and re-migrate their database on every run; before this guard, pointing them at the Aiven `defaultdb` would have wiped the real data. Verified with an unreachable host: the guard exits before any connection is attempted.
+- **The AI did not connect to Aiven itself.** The migration and seed were run by the author. Connecting would have meant signing in to an external service with a real password pasted into the chat; that password should be rotated.
+

@@ -1,33 +1,18 @@
+# The database is a managed MySQL 8 (Aiven), not a container. The API reads its URL
+# and credentials from backend/.env (gitignored; see backend/.env.example).
 services:
-  db:
-    image: mysql:8.4
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: salary
-      MYSQL_USER: salary
-      MYSQL_PASSWORD: salary
-    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci"]
-    ports:
-      - "3306:3306"
-    volumes:
-      - db-data:/var/lib/mysql
-      - ./docker/mysql-init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-usalary", "-psalary"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-
   api:
     build: ./backend
+    env_file:
+      - path: ./backend/.env
+        required: true
     environment:
-      APP_DATABASE_URL: mysql+pymysql://salary:salary@db:3306/salary
-      APP_TEST_DATABASE_URL: mysql+pymysql://salary:salary@db:3306/salary_test
+      # The CA file is mounted below; this path is where it lives in the container.
+      APP_DB_SSL_CA: /srv/ca.pem
+    volumes:
+      - ./backend/ca.pem:/srv/ca.pem:ro
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
 
   frontend:
     build: ./frontend
@@ -35,6 +20,3 @@ services:
       - "8080:80"
     depends_on:
       - api
-
-volumes:
-  db-data:

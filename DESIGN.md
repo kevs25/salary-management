@@ -78,7 +78,7 @@ On the frontend: container/presentational split, TanStack Query as the server-st
 ## 4. Trade-offs Taken
 
 - **Monolith over microservices.** One team, one bounded context. Splitting this would add network failure modes and buy nothing.
-- **MySQL over SQLite** (the brief allowed either). Costs a Docker dependency in tests; buys concurrency, window functions and production realism. Mitigated by making unit tests DB-free via the repository fakes and running integration tests against a containerised MySQL.
+- **MySQL over SQLite** (the brief allowed either). Costs a real database in tests; buys concurrency, window functions and production realism. Mitigated by making unit tests DB-free via the repository fakes and running integration tests against a dedicated `*_test` MySQL database (the app itself uses a managed MySQL on Aiven).
 - **Denormalised `is_current` flag.** Costs an invariant to maintain on every revision; buys a materially simpler and faster list query at 10k rows.
 - **FX snapshot over live rates.** Costs freshness; buys reproducible, testable analytics.
 - **No bulk importer.** Costs a migration convenience; buys focus on the workflow and analytics that the assessment actually asks to be done well.
