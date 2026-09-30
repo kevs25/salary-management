@@ -5,7 +5,6 @@ commits become SAVEPOINT releases (join_transaction_mode="create_savepoint"), so
 tests exercise the real commit path without leaking rows into each other.
 """
 
-import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -18,6 +17,7 @@ from sqlalchemy.orm import Session
 from alembic import command
 from app.core.database import connect_args
 from app.core.dependencies import get_db
+from app.core.settings import get_settings
 from app.main import create_app
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -25,7 +25,8 @@ BACKEND_DIR = Path(__file__).resolve().parents[2]
 
 @pytest.fixture(scope="session")
 def engine() -> Iterator[Engine]:
-    url = os.environ.get("APP_TEST_DATABASE_URL")
+    # Read through the app's settings, so it can come from backend/.env or the environment.
+    url = get_settings().test_database_url
     if not url:
         pytest.skip("APP_TEST_DATABASE_URL not set; see backend/README.md")
     # These tests drop and recreate every table. Refuse anything that is not

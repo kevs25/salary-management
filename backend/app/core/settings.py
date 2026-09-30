@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     # CA certificate for TLS to a managed MySQL (e.g. Aiven). Kept out of the URL so the
     # same URL works on the host and in the container, where the file path differs.
     db_ssl_ca: str | None = None
+    # Integration tests only: a separate database whose name ends in _test.
+    test_database_url: str | None = None
     db_pool_size: int = 10
     db_max_overflow: int = 10
     db_pool_recycle_seconds: int = 3600  # below MySQL's default wait_timeout of 8h
