@@ -486,6 +486,8 @@ export interface components {
             country: components["schemas"]["CountryOut"];
             manager: components["schemas"]["EmployeeRef"] | null;
             current_salary: components["schemas"]["SalaryRecordOut"] | null;
+            /** @description current base pay after tax; null if no salary */
+            net_pay: components["schemas"]["NetPay"] | null;
             /** @description current base pay against the band that applies today; null if none */
             pay_assessment: components["schemas"]["PayAssessment"] | null;
             /**
@@ -644,6 +646,28 @@ export interface components {
             min_years: number;
             /** Max Years */
             max_years: number | null;
+        };
+        /**
+         * NetPay
+         * @description Current base pay after the flat tax deduction, in the salary's local currency.
+         */
+        NetPay: {
+            /** Currency Code */
+            currency_code: string;
+            /** Base Amount */
+            base_amount: string;
+            /**
+             * Tax Rate
+             * @description fraction deducted, e.g. 0.10
+             */
+            tax_rate: string;
+            /** Tax Amount */
+            tax_amount: string;
+            /**
+             * Net Amount
+             * @description base_amount - tax_amount
+             */
+            net_amount: string;
         };
         /** OutOfBandEmployee */
         OutOfBandEmployee: {

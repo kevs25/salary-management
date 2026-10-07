@@ -117,6 +117,16 @@ class EmployeeRef(Schema):
     full_name: str
 
 
+class NetPay(Schema):
+    """Current base pay after the flat tax deduction, in the salary's local currency."""
+
+    currency_code: str
+    base_amount: Money
+    tax_rate: Decimal = Field(description="fraction deducted, e.g. 0.10")
+    tax_amount: Money
+    net_amount: Money = Field(description="base_amount - tax_amount")
+
+
 class EmployeeDetail(Schema):
     id: int
     employee_code: str
@@ -131,6 +141,7 @@ class EmployeeDetail(Schema):
     country: CountryOut
     manager: EmployeeRef | None
     current_salary: SalaryRecordOut | None
+    net_pay: NetPay | None = Field(description="current base pay after tax; null if no salary")
     pay_assessment: PayAssessment | None = Field(
         description="current base pay against the band that applies today; null if none"
     )

@@ -74,7 +74,9 @@ CRUD: paginated server-side searchable employee list (filters: department, count
 
 Analytics: headcount, total payroll cost (USD), avg/median salary, breakdowns by department / country / level / role, band compliance (paid below min or above max), compa-ratio (salary / band mid) per employee.
 
-Explicitly out of scope, do not build: payroll/payslips/tax, RBAC and multi-role auth, approval workflows, Excel import, live FX, equity/benefits/leave/performance, multi-tenancy, i18n, forecasting.
+Net pay: `EmployeeDetail.net_pay` is current base pay less a flat 10% tax (`services/tax.py`), in local currency. It is derived on read, never stored, so it cannot go stale after a revision.
+
+Explicitly out of scope, do not build: payroll/payslips/real (per-country) tax, RBAC and multi-role auth, approval workflows, Excel import, live FX, equity/benefits/leave/performance, multi-tenancy, i18n, forecasting.
 
 ## Performance
 

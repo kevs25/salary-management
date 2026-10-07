@@ -53,7 +53,7 @@ Two decisions worth calling out: **salary is effective-dated history, not a colu
 
 | Left out | Reasoning |
 |---|---|
-| Payroll run, payslips, tax, statutory deductions | This is a compensation *record* system, not a payroll engine. Payroll is a regulated, per-country problem an order of magnitude larger than the stated need. |
+| Payroll run, payslips, real tax, statutory deductions | This is a compensation *record* system, not a payroll engine. Payroll is a regulated, per-country problem an order of magnitude larger than the stated need. The one exception is an indicative **net pay** on the employee detail: a flat 10% deduction in every country, derived from the current salary and never stored. |
 | Multi-role auth & RBAC (employee self-service, manager approvals) | One persona was specified. A single HR login keeps auth a thin, replaceable layer; roles are a schema addition later, not a rewrite. |
 | Approval workflows / maker-checker on salary changes | Real requirement in a real org, but it needs a policy owner to define the chain. The effective-dated salary history already gives the audit trail approvals exist to protect. |
 | Excel/CSV bulk *import* | Tempting, but a forgiving importer is a project in itself (validation, partial failure, dedupe). The seed script proves bulk load works; the UI proves the workflow. |

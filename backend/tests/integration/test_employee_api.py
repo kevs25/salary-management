@@ -182,6 +182,8 @@ class TestWrites:
         assert body["current_salary"]["reason"] == "hire"
         assert body["current_salary"]["base_amount_usd"] == "120000.00"
         assert body["current_salary"]["band_id"] is not None  # exact seeded band
+        assert body["net_pay"]["tax_amount"] == "12000.00"
+        assert body["net_pay"]["net_amount"] == "108000.00"
         assert client.get(f"{URL}/{body['id']}").json() == body
         assert client.get(URL, params={"q": "N00001"}).json()["total"] == 1
 

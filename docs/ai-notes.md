@@ -160,3 +160,16 @@ The AI kept two of its own decisions in the new layout. The explicit `UnitOfWork
 - **The integration tests refuse any database whose name doesn't end in `_test`.** They drop and re-migrate their database on every run; before this guard, pointing them at the Aiven `defaultdb` would have wiped the real data. Verified with an unreachable host: the guard exits before any connection is attempted.
 - **The AI did not connect to Aiven itself.** The migration and seed were run by the author. Connecting would have meant signing in to an external service with a real password pasted into the chat; that password should be rotated.
 
+
+## 2026-09-30: Net pay after a flat 10% tax
+
+**Asked for:** a 10% tax deduction for new hires in every country, stored as a `gross_pay` column on `employees` and returned on `EmployeeDetail`.
+
+**Decided by hand, after the AI raised the conflicts:**
+
+- **It is called `net_pay`, not `gross_pay`.** Base pay minus tax is net pay; gross is the amount before deductions.
+- **Derived, not stored.** A column on `employees` would contradict "pay lives in SalaryRecord" and would be wrong after the first salary revision. `net_pay` is computed in the service from the current salary record, so there is no migration and nothing to keep in sync.
+- **It applies to everyone, not only new hires.** With one flat rate in every country, there is no reason to show existing employees as null.
+- **Tax stays out of scope beyond this.** REQUIREMENTS.md section 5 now names the flat 10% as the one exception; per-country tax, payslips and payroll are still out.
+
+**Delegated:** `services/tax.py`, the `NetPay` schema, tests (tax rounds half up to the cent, and tax + net always adds back to base), and the regenerated frontend API types.

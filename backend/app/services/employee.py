@@ -23,6 +23,7 @@ from app.schemas.employee import (
 from app.schemas.salary import SalaryRecordOut
 from app.services.analytics import assess, salary_in_band_currency
 from app.services.band import BandCell, BandResolver
+from app.services.tax import net_pay
 from app.utils.currency import to_money, to_usd
 
 # Manager chains are short (L1 -> L5); anything longer than this is a cycle or bad data.
@@ -92,6 +93,7 @@ class EmployeeService:
                 "country": employee.country,
                 "manager": employee.manager,
                 "current_salary": current,
+                "net_pay": net_pay(current.base_amount, current.currency_code) if current else None,
                 "pay_assessment": self._assess(employee, current),
                 "salary_history": history,
             }

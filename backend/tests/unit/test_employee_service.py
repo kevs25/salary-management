@@ -128,6 +128,10 @@ class TestCreateEmployee:
         assert salary.reason is ChangeReason.HIRE
         assert salary.currency_code == "INR"
         assert salary.base_amount == Decimal("1500000.00")
+        assert detail.net_pay is not None
+        assert detail.net_pay.currency_code == "INR"
+        assert detail.net_pay.tax_amount == Decimal("150000.00")
+        assert detail.net_pay.net_amount == Decimal("1350000.00")
         assert salary.fx_rate_to_usd == Decimal("0.01200000")
         assert salary.base_amount_usd == Decimal("18000.00")
         assert salary.bonus_amount_usd == Decimal("1800.00")

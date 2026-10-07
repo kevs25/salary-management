@@ -16,6 +16,7 @@ const employee = {
   country: { id: 2, code: 'IN', name: 'India', currency_code: 'INR' },
   manager: { id: 3, employee_code: 'E00003', full_name: 'Wei Tan' },
   current_salary: null,
+  net_pay: null,
   pay_assessment: null,
   salary_history: [],
 } as Schemas['EmployeeDetail']
